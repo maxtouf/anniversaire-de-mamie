@@ -329,3 +329,325 @@ function editGuest(id) {
         showNotification('Invité modifié avec succès!');
     });
 }
+
+function deleteGuest(id) {
+    const guest = guests.find(g => g.id === id);
+    if (!guest) return;
+    
+    // Créer une boîte de dialogue de confirmation modale
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Confirmation</h3>
+            <p>Êtes-vous sûr de vouloir supprimer "${guest.name}" ?</p>
+            <div class="modal-actions">
+                <button id="cancelDelete">Annuler</button>
+                <button id="confirmDelete" class="danger">Supprimer</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Gérer les actions
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    document.getElementById('confirmDelete').addEventListener('click', () => {
+        // Supprimer des tables si assigné
+        tables.forEach(table => {
+            table.seats = table.seats.map(seat => 
+                seat && seat.id === id ? null : seat
+            );
+        });
+        
+        // Supprimer de la liste
+        guests = guests.filter(g => g.id !== id);
+        
+        saveData();
+        updateGuestList();
+        updateTables();
+        updateStats();
+        
+        modal.remove();
+        showNotification('Invité supprimé avec succès!');
+    });
+}
+
+// Gestion des tables
+function initTableControls() {
+    const addTableBtn = document.getElementById('addTable');
+    const seatsInput = document.getElementById('seatsPerTable');
+    
+    addTableBtn.addEventListener('click', () => {
+        const seats = parseInt(seatsInput.value);
+        if (seats > 0) {
+            addTable(seats);
+        }
+    });
+    
+    // Initialiser l'affichage des tables
+    updateTables();
+}
+
+function addTable(seatsCount) {
+    const table = {
+        id: Date.now(),
+        seats: Array(seatsCount).fill(null),
+        number: tables.length + 1
+    };
+    
+    tables.push(table);
+    saveData();
+    updateTables();
+    showNotification('Table ajoutée avec succès!');
+}
+
+function updateTables() {
+    const tablesContainer = document.getElementById('tablesContainer');
+    tablesContainer.innerHTML = '';
+    
+    if (tables.length === 0) {
+        tablesContainer.innerHTML = `
+            <div class="empty-list">
+                <i class="fas fa-chair"></i>
+                <p>Aucune table n'a été créée</p>
+            </div>
+        `;
+        return;
+    }
+    
+    tables.forEach(table => {
+        const tableElement = document.createElement('div');
+        tableElement.className = 'table';
+        tableElement.innerHTML = `
+            <h3>Table ${table.number}</h3>
+            <div class="seats">
+                ${table.seats.map((guest, index) => `
+                    <div class="seat ${guest ? 'occupied' : ''}" 
+                         onclick="assignGuest(${table.id}, ${index})">
+                        ${guest ? guest.name : '<i class="fas fa-plus"></i>'}
+                    </div>
+                `).join('')}
+            </div>
+            <button class="delete-table" onclick="deleteTable(${table.id})">
+                <i class="fas fa-trash"></i> Supprimer cette table
+            </button>
+        `;
+        tablesContainer.appendChild(tableElement);
+    });
+}
+
+function deleteTable(tableId) {
+    const tableIndex = tables.findIndex(t => t.id === tableId);
+    if (tableIndex === -1) return;
+    
+    // Créer une boîte de dialogue de confirmation modale
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Confirmation</h3>
+            <p>Êtes-vous sûr de vouloir supprimer la table ${tables[tableIndex].number} ?</p>
+            <div class="modal-actions">
+                <button id="cancelDelete">Annuler</button>
+                <button id="confirmDelete" class="danger">Supprimer</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Gérer les actions
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    document.getElementById('confirmDelete').addEventListener('click', () => {
+        tables.splice(tableIndex, 1);
+        
+        // Renumérote les tables
+        tables.forEach((table, idx) => {
+            table.number = idx + 1;
+        });
+        
+        saveData();
+        updateTables();
+        
+        modal.remove();
+        showNotification('Table supprimée avec succès!');
+    });
+}
+
+function assignGuest(tableId, seatIndex) {
+    const table = tables.find(t => t.id === tableId);
+    if (!table) return;
+    
+    if (table.seats[seatIndex]) {
+        // Libérer la place
+        table.seats[seatIndex] = null;
+        saveData();
+        updateTables();
+        return;
+    }
+    
+    // Filtrer les invités disponibles (confirmés et pas déjà assignés)
+    const availableGuests = guests.filter(g => 
+        g.status === 'confirmed' && 
+        !tables.some(t => t.seats.some(seat => seat && seat.id === g.id))
+    );
+    
+    if (availableGuests.length === 0) {
+        showNotification('Aucun invité confirmé disponible');
+        return;
+    }
+    
+    // Afficher une modale pour sélectionner un invité
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>Assigner un invité</h3>
+            <div class="guest-select">
+                ${availableGuests.map(guest => `
+                    <div class="guest-option" data-id="${guest.id}">
+                        ${guest.name}
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Gérer la sélection d'un invité
+    const options = modal.querySelectorAll('.guest-option');
+    options.forEach(option => {
+        option.addEventListener('click', () => {
+            const guestId = parseInt(option.getAttribute('data-id'));
+            const guest = guests.find(g => g.id === guestId);
+            
+            if (guest) {
+                table.seats[seatIndex] = guest;
+                saveData();
+                updateTables();
+                modal.remove();
+            }
+        });
+    });
+}
+
+// Mise à jour des statistiques
+function updateStats() {
+    const total = guests.length;
+    const confirmed = guests.filter(g => g.status === 'confirmed').length;
+    const pending = guests.filter(g => g.status === 'pending').length;
+    const declined = guests.filter(g => g.status === 'declined').length;
+    
+    document.getElementById('totalGuests').textContent = total;
+    document.getElementById('confirmedGuests').textContent = confirmed;
+    document.getElementById('pendingGuests').textContent = pending;
+    document.getElementById('declinedGuests').textContent = declined;
+}
+
+// Ajouter ces styles CSS pour les modales
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 500px;
+    width: 90%;
+}
+
+.close {
+    float: right;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.danger {
+    background-color: var(--danger-color);
+}
+
+.notification {
+    position: fixed;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 30px;
+    box-shadow: var(--box-shadow);
+    z-index: 1001;
+    transition: top 0.3s ease;
+}
+
+.notification.show {
+    top: 20px;
+}
+
+.guest-select {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.guest-option {
+    padding: 0.8rem;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.guest-option:hover {
+    background-color: var(--light-color);
+}
+
+.empty-list {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gray-color);
+}
+
+.empty-list i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.delete-table {
+    margin-top: 1rem;
+    background-color: var(--light-color);
+    color: var(--gray-color);
+}
+
+.delete-table:hover {
+    background-color: var(--danger-color);
+}
+</style>
+`);
