@@ -220,3 +220,112 @@ function initGuestForm() {
         showNotification('Invité ajouté avec succès!');
     });
 }
+
+function updateGuestList(filter = 'all') {
+    const guestsList = document.getElementById('guestsList');
+    guestsList.innerHTML = '';
+    
+    const filteredGuests = filter === 'all' 
+        ? guests 
+        : guests.filter(guest => guest.status === filter);
+    
+    if (filteredGuests.length === 0) {
+        guestsList.innerHTML = `
+            <div class="empty-list">
+                <i class="fas fa-user-slash"></i>
+                <p>Aucun invité dans cette catégorie</p>
+            </div>
+        `;
+        return;
+    }
+    
+    filteredGuests.forEach(guest => {
+        const card = document.createElement('div');
+        card.className = 'guest-card';
+        
+        // Définir la classe du statut
+        let statusClass = '';
+        if (guest.status === 'confirmed') statusClass = 'confirmed';
+        if (guest.status === 'declined') statusClass = 'declined';
+        
+        // Traduire le statut
+        let statusText = 'En attente';
+        if (guest.status === 'confirmed') statusText = 'Confirmé';
+        if (guest.status === 'declined') statusText = 'Ne vient pas';
+        
+        card.innerHTML = `
+            <div class="guest-info">
+                <strong>${guest.name}</strong>
+                <span class="status ${statusClass}">${statusText}</span>
+            </div>
+            <div class="guest-actions">
+                <button onclick="editGuest(${guest.id})"><i class="fas fa-edit"></i></button>
+                <button onclick="deleteGuest(${guest.id})"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        guestsList.appendChild(card);
+    });
+}
+
+function initFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const filter = button.getAttribute('data-filter');
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            updateGuestList(filter);
+        });
+    });
+}
+
+function editGuest(id) {
+    const guest = guests.find(g => g.id === id);
+    if (!guest) return;
+    
+    // Créer une boîte de dialogue modale au lieu d'utiliser prompt
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Modifier l'invité</h3>
+            <form id="editForm">
+                <label for="editName">Nom</label>
+                <input type="text" id="editName" value="${guest.name}" required>
+                <label for="editStatus">Statut</label>
+                <select id="editStatus">
+                    <option value="pending" ${guest.status === 'pending' ? 'selected' : ''}>En attente</option>
+                    <option value="confirmed" ${guest.status === 'confirmed' ? 'selected' : ''}>Confirmé</option>
+                    <option value="declined" ${guest.status === 'declined' ? 'selected' : ''}>Ne vient pas</option>
+                </select>
+                <button type="submit">Enregistrer</button>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Gérer la fermeture
+    const close = modal.querySelector('.close');
+    close.addEventListener('click', () => {
+        modal.remove();
+    });
+    
+    // Gérer la soumission
+    const form = modal.querySelector('#editForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        guest.name = document.getElementById('editName').value;
+        guest.status = document.getElementById('editStatus').value;
+        
+        saveData();
+        updateGuestList();
+        updateStats();
+        updateTables(); // Mettre à jour les tables au cas où un invité assigné change de statut
+        
+        modal.remove();
+        showNotification('Invité modifié avec succès!');
+    });
+}
