@@ -1,0 +1,300 @@
+/* Styles spécifiques à la liste de tâches */
+
+.todo-section {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+    .todo-section {
+        grid-template-columns: 1fr 2fr;
+    }
+}
+
+.todo-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.todo-form:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.todo-list-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.todo-list-container:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.todo-filters {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 1.2rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 0.8rem;
+    background-color: var(--light-color);
+    transition: var(--transition);
+    border-left: 4px solid #ddd;
+}
+
+.task-item:hover {
+    transform: translateX(3px);
+    box-shadow: var(--box-shadow);
+}
+
+/* Styles selon la priorité */
+.task-item.priority-high {
+    border-left-color: var(--danger-color);
+}
+
+.task-item.priority-medium {
+    border-left-color: var(--warning-color);
+}
+
+.task-item.priority-low {
+    border-left-color: var(--success-color);
+}
+
+/* Tâche complétée */
+.task-item.completed {
+    opacity: 0.75;
+    background-color: #f0f0f0;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+    color: var(--gray-color);
+}
+
+/* Case à cocher de tâche */
+.task-checkbox {
+    display: flex;
+    align-items: center;
+    padding-top: 6px;
+}
+
+.task-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.task-checkbox label {
+    position: relative;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.task-checkbox input[type="checkbox"]:checked + label {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.task-checkbox input[type="checkbox"]:checked + label:after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    color: white;
+    font-weight: bold;
+}
+
+.task-checkbox label:hover {
+    border-color: var(--primary-color);
+}
+
+/* Contenu de la tâche */
+.task-content {
+    flex-grow: 1;
+}
+
+.task-text {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+}
+
+.task-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+    color: var(--gray-color);
+}
+
+.task-category, .task-deadline, .task-priority {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.task-priority.priority-high {
+    color: var(--danger-color);
+}
+
+.task-priority.priority-medium {
+    color: var(--warning-color);
+}
+
+.task-priority.priority-low {
+    color: var(--success-color);
+}
+
+/* Styles d'échéance */
+.task-deadline.overdue {
+    color: var(--danger-color);
+    font-weight: bold;
+}
+
+.task-deadline.today {
+    color: var(--warning-color);
+    font-weight: bold;
+}
+
+.task-deadline.soon {
+    color: var(--accent-color);
+}
+
+/* Actions sur les tâches */
+.task-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.task-actions button {
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    min-width: 34px;
+    background-color: transparent;
+    color: var(--gray-color);
+}
+
+.task-actions button:hover {
+    background-color: var(--light-color);
+    transform: translateY(-2px);
+}
+
+.task-actions .edit-task:hover {
+    color: var(--warning-color);
+}
+
+.task-actions .delete-task:hover {
+    color: var(--danger-color);
+}
+
+/* Statistiques de tâches */
+.todo-stats {
+    background-color: #f9f9f9;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+}
+
+.todo-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.todo-stat-item span {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.todo-stat-item label {
+    font-size: 0.9rem;
+    color: var(--gray-color);
+}
+
+/* Liste vide */
+.empty-todo-list {
+    text-align: center;
+    padding: 2rem;
+    color: var(--gray-color);
+}
+
+.empty-todo-list i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* Formulaire d'ajout de tâche */
+.todo-form form {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    color: var(--gray-color);
+}
+
+/* Adaptations pour mobile */
+@media (max-width: 576px) {
+    .todo-filters {
+        flex-direction: column;
+    }
+    
+    .task-meta {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    
+    .task-item {
+        flex-direction: column;
+    }
+    
+    .task-checkbox {
+        align-self: flex-end;
+        order: 3;
+    }
+    
+    .task-actions {
+        align-self: flex-end;
+    }
+}
