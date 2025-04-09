@@ -20,6 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initFilters();
     initTableControls();
     
+    // Initialiser la table en U
+    if (typeof initUTableControls === 'function') {
+        initUTableControls();
+    }
+    
     // Initialiser les boutons d'import/export
     initDataControls();
     
