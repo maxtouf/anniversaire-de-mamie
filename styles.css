@@ -29,12 +29,12 @@ body {
     line-height: 1.7;
     color: var(--dark-color);
     background-color: var(--background-color);
-    padding-bottom: 80px; /* Reduced space for fixed footer */
+    /* Le padding-bottom est maintenant géré dynamiquement par JS */
 }
 
 header {
     background-color: var(--light-color);
-    padding: 1rem 1.5rem;
+    padding: 0.8rem 1.2rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     position: sticky;
     top: 0;
@@ -43,7 +43,7 @@ header {
 
 h1 {
     color: var(--secondary-color);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     text-align: center;
     font-weight: 600;
     font-size: 1.8rem;
@@ -51,7 +51,7 @@ h1 {
 
 h2 {
     color: var(--secondary-color);
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     font-size: 1.4rem;
     font-weight: 500;
     display: flex;
@@ -69,7 +69,8 @@ h2 i {
 nav {
     display: flex;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
+    flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -98,7 +99,7 @@ nav {
 
 main {
     max-width: 1300px;
-    margin: 2.5rem auto;
+    margin: 2rem auto;
     padding: 0 1.5rem;
 }
 
@@ -119,10 +120,10 @@ main {
 /* Card Style Base */
 .card {
     background: var(--light-color);
-    padding: 2rem;
+    padding: 1.8rem;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
     transition: var(--transition);
 }
 
@@ -290,7 +291,7 @@ button:active {
 }
 
 .filters {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     display: flex;
     gap: 0.8rem;
     flex-wrap: wrap;
@@ -461,11 +462,11 @@ button:active {
 }
 
 .seat, .u-table-seat {
-    padding: 1rem;
+    padding: 0.8rem;
     border: 1px solid #e0e0e0;
     border-radius: var(--border-radius);
     text-align: center;
-    min-height: 65px; /* Increased height */
+    min-height: 60px; /* Slightly reduced height */
     display: flex;
     flex-direction: column; /* Allow stacking */
     align-items: center;
@@ -580,8 +581,8 @@ button:active {
 
 .u-table-seat {
     position: absolute;
-    width: 70px; /* Slightly wider */
-    height: 70px; /* Slightly taller */
+    width: 65px; /* Slightly smaller */
+    height: 65px; /* Slightly smaller */
     z-index: 10;
     /* left, top are set in JS */
 }
@@ -594,14 +595,14 @@ button:active {
     font-size: 0.9rem;
 }
 
-/* Footer - UPDATED: reduced size */
+/* Footer - More compact design */
 footer {
     background: var(--light-color);
-    padding: 0.8rem 1rem; /* Reduced padding */
+    padding: 0.6rem 0.8rem; /* More reduced padding */
     position: fixed;
     bottom: 0;
     width: 100%;
-    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.05); /* Lighter shadow */
+    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.04); /* Even lighter shadow */
     z-index: 90;
 }
 
@@ -609,7 +610,7 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1.8rem; /* Reduced gap */
+    gap: 1.5rem; /* More reduced gap */
     flex-wrap: wrap;
 }
 
@@ -617,23 +618,23 @@ footer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3rem; /* Reduced gap */
-    min-width: 65px; /* Smaller min width */
+    gap: 0.2rem; /* Minimal gap */
+    min-width: 60px; /* Even smaller min width */
 }
 
 .stat-item i {
     color: var(--primary-color);
-    font-size: 1.2rem; /* Smaller icons */
+    font-size: 1.1rem; /* Smaller icons */
 }
 
 .stat-item span {
-    font-size: 1.3rem; /* Smaller numbers */
+    font-size: 1.2rem; /* Smaller numbers */
     font-weight: 600;
     color: var(--secondary-color);
 }
 
 .stat-item label {
-    font-size: 0.75rem; /* Smaller labels */
+    font-size: 0.7rem; /* Smaller labels */
     color: var(--gray-color);
     font-weight: 500;
 }
@@ -641,11 +642,11 @@ footer {
 /* Import/Export Buttons */
 .data-controls {
     position: absolute;
-    right: 1.2rem;
+    right: 1rem;
     bottom: 50%;
     transform: translateY(50%);
     display: flex;
-    gap: 0.6rem; /* Reduced gap */
+    gap: 0.5rem; /* Reduced gap */
     opacity: 0.7;
     transition: var(--transition);
 }
@@ -658,13 +659,13 @@ footer {
     background-color: #e9ecef;
     color: var(--dark-color);
     padding: 0;
-    width: 36px; /* Smaller buttons */
-    height: 36px; /* Smaller buttons */
+    width: 32px; /* Smaller buttons */
+    height: 32px; /* Smaller buttons */
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 0.9rem; /* Smaller icons */
+    font-size: 0.85rem; /* Smaller icons */
     border: none;
     box-shadow: none;
 }
@@ -679,75 +680,79 @@ footer {
 @media (max-width: 992px) {
     main {
         padding: 0 1rem;
-        margin-top: 2rem;
+        margin-top: 1.8rem;
         margin-bottom: 1.5rem;
     }
     .card, .table {
-        padding: 1.8rem;
+        padding: 1.5rem;
     }
     .stats {
-        gap: 1.2rem;
+        gap: 1rem;
     }
     .data-controls {
-        right: 1rem;
-        gap: 0.5rem;
+        right: 0.8rem;
+        gap: 0.4rem;
     }
     .icon-btn {
-        width: 34px;
-        height: 34px;
-        font-size: 0.85rem;
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
     }
 }
 
 @media (max-width: 768px) {
     body {
-        padding-bottom: 120px; /* Reduced space for footer */
+        /* Padding bottom calculé par JS */
     }
     header {
-        padding: 0.8rem 1rem;
+        padding: 0.6rem 0.8rem;
     }
-    h1 { font-size: 1.6rem; margin-bottom: 1.2rem; }
-    h2 { font-size: 1.3rem; margin-bottom: 1.2rem; }
-    nav { gap: 0.4rem; flex-wrap: wrap; justify-content: center; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    h2 { font-size: 1.2rem; margin-bottom: 1rem; }
+    nav { 
+        gap: 0.3rem; 
+        flex-wrap: wrap; 
+        justify-content: center; 
+    }
     .nav-btn { 
-        padding: 0.5rem 0.8rem; 
-        font-size: 0.9rem; 
+        padding: 0.4rem 0.7rem; 
+        font-size: 0.85rem; 
         flex: 0 0 auto;
     }
     form, .u-table-form {
         grid-template-columns: 1fr;
     }
     main {
-        margin-top: 1.2rem;
-        margin-bottom: 1rem;
+        margin-top: 1rem;
+        margin-bottom: 0.8rem;
     }
     .card, .table {
-        padding: 1.5rem;
-        margin-bottom: 1.8rem;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
     }
     footer {
-        padding: 0.8rem;
+        padding: 0.6rem;
     }
     .stats {
-        gap: 1rem;
+        gap: 0.8rem;
         justify-content: space-around;
     }
     .stat-item {
         min-width: auto;
-        width: 60px;
+        width: 55px;
     }
-    .stat-item span { font-size: 1.2rem; }
-    .stat-item label { font-size: 0.7rem; }
+    .stat-item span { font-size: 1.1rem; }
+    .stat-item label { font-size: 0.65rem; }
     .data-controls {
         position: static; /* Remove absolute positioning */
         transform: none;
-        margin-top: 0.8rem;
+        margin-top: 0.6rem;
         justify-content: center;
     }
     .u-table-seat {
-        width: 50px;
-        height: 50px;
-        font-size: 0.8rem;
+        width: 45px;
+        height: 45px;
+        font-size: 0.75rem;
     }
     .guest-card { 
         flex-direction: column; 
@@ -759,119 +764,116 @@ footer {
     
     /* Table adjustments */
     .table h3 {
-        margin-bottom: 1.2rem;
+        margin-bottom: 1rem;
         font-size: 1.1rem;
     }
     .seats {
-        gap: 0.8rem;
+        gap: 0.6rem;
     }
 }
 
 @media (max-width: 480px) {
     body {
-        padding-bottom: 100px; /* Further reduced space for footer */
-    }
-    h1 { font-size: 1.4rem; }
-    h2 { font-size: 1.2rem; }
-    .nav-btn { 
-        padding: 0.4rem 0.6rem; 
-        font-size: 0.8rem; 
-        gap: 0.3rem; 
-    }
-    .card, .table {
-        padding: 1.2rem;
-        margin-bottom: 1.5rem;
-    }
-    footer {
-        padding: 0.7rem 0.5rem;
-    }
-    .stats {
-        gap: 0.5rem;
-    }
-    .stat-item {
-        width: 50px;
-    }
-    .stat-item i { font-size: 1rem; }
-    .stat-item span { font-size: 1.1rem; }
-    .stat-item label { font-size: 0.65rem; }
-    
-    /* Adjusted form elements */
-    input, select {
-        padding: 0.7rem 0.9rem;
-        font-size: 0.9rem;
-    }
-    button {
-        padding: 0.7rem 1.2rem;
-        font-size: 0.9rem;
-    }
-    
-    /* Compact guest cards */
-    .guest-card {
-        padding: 0.9rem;
-    }
-    .guest-info strong {
-        font-size: 1rem;
-    }
-    .status {
-        padding: 0.2rem 0.6rem;
-        font-size: 0.7rem;
-    }
-    .guest-actions button {
-        width: 32px;
-        height: 32px;
-        font-size: 0.8rem;
-    }
-    
-    /* Seats */
-    .seat, .u-table-seat {
-        padding: 0.8rem;
-        min-height: 50px;
-    }
-}
-
-/* Add support for very small screens */
-@media (max-width: 360px) {
-    body {
-        padding-bottom: 90px;
+        /* Padding bottom calculé par JS */
     }
     h1 { font-size: 1.3rem; }
     h2 { font-size: 1.1rem; }
     .nav-btn { 
         padding: 0.3rem 0.5rem; 
-        font-size: 0.75rem;
-    }
-    main {
-        padding: 0 0.8rem;
+        font-size: 0.75rem; 
+        gap: 0.2rem;
     }
     .card, .table {
         padding: 1rem;
+        margin-bottom: 1.2rem;
+    }
+    footer {
+        padding: 0.5rem 0.4rem; /* Extremely minimal padding */
     }
     .stats {
-        gap: 0.4rem;
+        gap: 0.5rem;
     }
     .stat-item {
         width: 45px;
     }
-    .stat-item span { 
-        font-size: 1rem; 
+    .stat-item i { font-size: 0.9rem; }
+    .stat-item span { font-size: 1rem; }
+    .stat-item label { font-size: 0.6rem; }
+    
+    /* Adjusted form elements */
+    input, select {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
     }
-    .stat-item label { 
-        font-size: 0.6rem; 
+    button {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
     }
+    
+    /* Compact guest cards */
+    .guest-card {
+        padding: 0.8rem;
+    }
+    .guest-info strong {
+        font-size: 0.95rem;
+    }
+    .status {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.65rem;
+    }
+    .guest-actions button {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+    
+    /* Seats */
+    .seat, .u-table-seat {
+        padding: 0.7rem;
+        min-height: 45px;
+    }
+}
+
+/* Support for very small screens */
+@media (max-width: 360px) {
+    body {
+        /* Padding bottom calculé par JS */
+    }
+    h1 { font-size: 1.2rem; }
+    h2 { font-size: 1rem; }
+    .nav-btn { 
+        padding: 0.3rem 0.4rem; 
+        font-size: 0.7rem;
+    }
+    main {
+        padding: 0 0.7rem;
+    }
+    .card, .table {
+        padding: 0.8rem;
+    }
+    .stats {
+        gap: 0.3rem;
+    }
+    .stat-item {
+        width: 40px;
+    }
+    .stat-item i { font-size: 0.85rem; }
+    .stat-item span { font-size: 0.9rem; }
+    .stat-item label { font-size: 0.55rem; }
     
     /* Adjust table layout */
     .seats {
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
     .seat, .u-table-seat {
-        min-height: 45px;
-        padding: 0.6rem;
-        font-size: 0.8rem;
+        min-height: 40px;
+        padding: 0.5rem;
+        font-size: 0.75rem;
     }
 }
 
 
-/* Modal Styles (copied from script.js and integrated here) */
+/* Modal Styles */
 .modal {
     position: fixed;
     top: 0;
@@ -896,7 +898,7 @@ footer {
 
 .modal-content {
     background-color: white;
-    padding: 2rem 2.5rem;
+    padding: 1.8rem 2rem;
     border-radius: var(--border-radius);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     max-width: 500px;
@@ -911,7 +913,7 @@ footer {
 }
 
 .modal-content h3 {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     color: var(--secondary-color);
     font-weight: 600;
     text-align: center;
@@ -941,9 +943,9 @@ footer {
 
 .close {
     position: absolute;
-    top: 15px;
-    right: 15px;
-    font-size: 1.8rem;
+    top: 12px;
+    right: 12px;
+    font-size: 1.6rem;
     line-height: 1;
     color: var(--gray-color);
     cursor: pointer;
@@ -960,14 +962,14 @@ footer {
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
     border-top: 1px solid #eee;
-    padding-top: 1.5rem;
+    padding-top: 1.2rem;
 }
 
 .modal-actions button {
-    min-width: 100px;
+    min-width: 90px;
 }
 
 .modal-actions .primary {
@@ -998,21 +1000,21 @@ footer {
 /* Responsive Modal Adjustments */
 @media (max-width: 480px) {
     .modal-content {
-        padding: 1.5rem;
+        padding: 1.2rem;
         width: 95%;
     }
     .modal-content h3 {
-        font-size: 1.2rem;
-        margin-bottom: 1.2rem;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
     }
     .close {
-        top: 10px;
-        right: 10px;
-        font-size: 1.5rem;
+        top: 8px;
+        right: 8px;
+        font-size: 1.3rem;
     }
 }
 
-/* Notification Styles (copied from script.js and integrated here) */
+/* Notification Styles */
 .notification {
     position: fixed;
     bottom: -100px; /* Start off-screen */
@@ -1020,16 +1022,17 @@ footer {
     transform: translateX(-50%);
     background-color: var(--dark-color); /* Darker notifications */
     color: white;
-    padding: 0.8rem 1.5rem;
+    padding: 0.7rem 1.2rem;
     border-radius: var(--border-radius);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     z-index: 1001;
     transition: bottom 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bounce effect */
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
 .notification.show {
-    bottom: 30px;
+    bottom: 25px;
 }
 
 .notification.error {
@@ -1045,7 +1048,7 @@ footer {
 }
 
 .guest-option {
-    padding: 1rem;
+    padding: 0.9rem;
     border-bottom: 1px solid #eee;
     cursor: pointer;
     transition: var(--transition);
@@ -1062,7 +1065,7 @@ footer {
 
 .empty-list {
     text-align: center;
-    padding: 3rem;
+    padding: 2.5rem;
     color: var(--gray-color);
     border: 2px dashed #e0e0e0;
     border-radius: var(--border-radius);
@@ -1070,18 +1073,18 @@ footer {
 }
 
 .empty-list i {
-    font-size: 3.5rem;
-    margin-bottom: 1rem;
+    font-size: 3rem;
+    margin-bottom: 0.8rem;
     display: block;
 }
 
 .couple-note {
     color: var(--accent-color);
     font-style: italic;
-    margin-bottom: 1.5rem; /* Increased margin */
-    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
     text-align: center;
-    padding: 0.5rem;
+    padding: 0.4rem;
     background-color: #fff5f5;
     border-radius: var(--border-radius);
 }
@@ -1093,5 +1096,41 @@ footer {
     }
     .guest-select {
         max-height: 250px;
+    }
+}
+
+/* Fix for mobile landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+    body {
+        padding-bottom: 80px;
+    }
+    main {
+        margin-top: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+    .modal-content {
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+    #guestsList {
+        max-height: 200px;
+    }
+    .guest-select {
+        max-height: 150px;
+    }
+    footer {
+        padding: 0.4rem 0.5rem;
+    }
+    .stats {
+        gap: 0.6rem;
+    }
+    .stat-item i {
+        font-size: 0.9rem;
+    }
+    .stat-item span {
+        font-size: 0.9rem;
+    }
+    .stat-item label {
+        font-size: 0.55rem;
     }
 }
