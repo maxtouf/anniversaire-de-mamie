@@ -32,7 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
     updateGuestList();
     updateTables();
     updateStats();
+    
+    // Ajuster la hauteur du contenu en fonction du footer
+    adjustContentHeight();
+    window.addEventListener('resize', adjustContentHeight);
 });
+
+// Ajuster la hauteur du contenu pour éviter les problèmes avec le footer fixe
+function adjustContentHeight() {
+    const footer = document.querySelector('footer');
+    const footerHeight = footer.offsetHeight;
+    document.body.style.paddingBottom = `${footerHeight + 20}px`; // Ajouter un peu d'espace supplémentaire
+}
 
 // Sauvegarde des données
 function saveData() {
@@ -719,6 +730,9 @@ function updateStats() {
     if (document.getElementById('coupleCount')) {
         document.getElementById('coupleCount').textContent = couples;
     }
+    
+    // Recalculer la hauteur du footer après la mise à jour des statistiques
+    setTimeout(adjustContentHeight, 100);
 }
 
 // Ajouter ces styles CSS pour les modales
@@ -744,6 +758,8 @@ document.head.insertAdjacentHTML('beforeend', `
     box-shadow: var(--box-shadow);
     max-width: 500px;
     width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .close {
@@ -849,6 +865,17 @@ document.head.insertAdjacentHTML('beforeend', `
     font-size: 0.9rem;
     color: var(--gray-color);
     margin-top: 0.3rem;
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 1.5rem;
+    }
+    
+    .notification {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
 }
 </style>
 `);
