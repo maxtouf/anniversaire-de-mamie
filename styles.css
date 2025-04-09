@@ -157,6 +157,92 @@ button:hover {
     transform: translateY(-2px);
 }
 
+/* Option couple */
+.couple-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+}
+
+.toggle-checkbox {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.toggle-label {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--dark-color);
+    padding-left: 40px;
+    user-select: none;
+}
+
+.toggle-label:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 36px;
+    height: 18px;
+    border-radius: 12px;
+    background-color: #ddd;
+    transition: var(--transition);
+}
+
+.toggle-label:after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: white;
+    transition: var(--transition);
+}
+
+.toggle-checkbox:checked + .toggle-label:before {
+    background-color: var(--primary-color);
+}
+
+.toggle-checkbox:checked + .toggle-label:after {
+    left: 20px;
+}
+
+.toggle-checkbox:focus + .toggle-label:before {
+    box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.3);
+}
+
+.hidden {
+    display: none;
+}
+
+/* Badge couple */
+.badge-couple {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    background-color: var(--accent-color);
+    color: white;
+    margin-left: 0.5rem;
+}
+
+.partner-name {
+    margin-top: 0.3rem;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--gray-color);
+}
+
 /* Liste des invités */
 .guest-list {
     background: white;
