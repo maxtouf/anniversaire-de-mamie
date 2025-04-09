@@ -1,786 +1,731 @@
-// Gestion des données
-let guests = [];
-let tables = [];
-
-// Vérifier le stockage local au chargement
-document.addEventListener('DOMContentLoaded', () => {
-    // Charger les données depuis localStorage s'il en existe
-    if (localStorage.getItem('guests')) {
-        guests = JSON.parse(localStorage.getItem('guests'));
-    }
-    if (localStorage.getItem('tables')) {
-        tables = JSON.parse(localStorage.getItem('tables'));
-    }
-
-    // Initialiser la navigation
-    initNavigation();
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les données
+    let guests = JSON.parse(localStorage.getItem('guests')) || [];
+    let tables = JSON.parse(localStorage.getItem('tables')) || [];
     
     // Initialiser les composants
+    initNavigation();
     initGuestForm();
     initFilters();
+    initDataControls();
     initTableControls();
     
-    // Initialiser la table en U
-    if (typeof initUTableControls === 'function') {
-        initUTableControls();
+    // Gérer l'option couple
+    const coupleToggle = document.getElementById('couple');
+    const partnerField = document.getElementById('partner-field');
+    
+    if (coupleToggle) {
+        coupleToggle.addEventListener('change', function() {
+            partnerField.classList.toggle('hidden', !this.checked);
+        });
     }
     
-    // Initialiser les boutons d'import/export
-    initDataControls();
+    // Mise à jour responsive du footer
+    adjustContentHeight();
+    window.addEventListener('resize', adjustContentHeight);
     
-    // Mettre à jour l'affichage
+    // Mettre à jour les listes et stats
     updateGuestList();
     updateTables();
     updateStats();
     
-    // Ajuster la hauteur du contenu en fonction du footer
-    adjustContentHeight();
-    window.addEventListener('resize', adjustContentHeight);
-});
-
-// Ajuster la hauteur du contenu pour éviter les problèmes avec le footer fixe
-function adjustContentHeight() {
-    const footer = document.querySelector('footer');
-    const footerHeight = footer.offsetHeight;
-    document.body.style.paddingBottom = `${footerHeight + 20}px`; // Ajouter un peu d'espace supplémentaire
-}
-
-// Sauvegarde des données
-function saveData() {
-    localStorage.setItem('guests', JSON.stringify(guests));
-    localStorage.setItem('tables', JSON.stringify(tables));
-}
-
-// Initialisation des contrôles d'import/export
-function initDataControls() {
-    // Bouton d'exportation
-    document.getElementById('exportData').addEventListener('click', exportData);
-    
-    // Bouton d'importation
-    document.getElementById('importData').addEventListener('click', () => {
-        document.getElementById('importFile').click();
-    });
-    
-    // Input de fichier caché
-    document.getElementById('importFile').addEventListener('change', importData);
-}
-
-// Exportation des données
-function exportData() {
-    // Créer l'objet de données
-    const data = {
-        guests: guests,
-        tables: tables,
-        exportDate: new Date().toISOString(),
-        appVersion: '1.0'
-    };
-    
-    // Convertir en JSON
-    const jsonData = JSON.stringify(data, null, 2);
-    
-    // Créer un blob
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    
-    // Créer un URL pour le blob
-    const url = URL.createObjectURL(blob);
-    
-    // Créer un lien et déclencher le téléchargement
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `anniversaire-mamie-${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Nettoyer
-    setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }, 0);
-    
-    showNotification('Données exportées avec succès');
-}
-
-// Importation des données
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
+    // Fonction pour ajuster la taille du contenu en fonction du footer
+    function adjustContentHeight() {
+        const footer = document.querySelector('footer');
+        if (footer) {
+            const footerHeight = footer.offsetHeight;
+            document.body.style.paddingBottom = `${footerHeight + 10}px`;
             
-            // Vérifier la structure des données
-            if (data.guests && Array.isArray(data.guests) && 
-                data.tables && Array.isArray(data.tables)) {
-                
-                // Confirmer l'importation
-                showImportConfirmation(data);
-            } else {
-                throw new Error('Structure de fichier invalide');
-            }
-        } catch (error) {
-            showNotification('Erreur: Fichier invalide', true);
-            console.error(error);
+            // Ajuster la position des notifications
+            const notifications = document.querySelectorAll('.notification');
+            notifications.forEach(notification => {
+                notification.style.bottom = `${footerHeight + 10}px`;
+            });
         }
+    }
+    
+    // Fonction pour sauvegarder les données
+    function saveData() {
+        localStorage.setItem('guests', JSON.stringify(guests));
+        localStorage.setItem('tables', JSON.stringify(tables));
+    }
+    
+    // Initialiser les contrôles d'import/export
+    function initDataControls() {
+        // Export
+        document.getElementById('export-btn').addEventListener('click', exportData);
         
-        // Réinitialiser l'input pour permettre de sélectionner le même fichier à nouveau
-        event.target.value = '';
-    };
+        // Import
+        document.getElementById('import-btn').addEventListener('change', importData);
+    }
     
-    reader.readAsText(file);
-}
-
-// Afficher une confirmation avant d'importer
-function showImportConfirmation(data) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Confirmer l'importation</h3>
-            <p>Cette action remplacera toutes vos données actuelles.</p>
-            <p>Exportées le: ${new Date(data.exportDate || Date.now()).toLocaleString()}</p>
-            <p>Invités: ${data.guests.length}</p>
-            <p>Tables: ${data.tables.length}</p>
-            
-            <div class="modal-actions">
-                <button id="cancelImport">Annuler</button>
-                <button id="confirmImport" class="primary">Importer</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    // Gérer la fermeture
-    modal.querySelector('.close').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    // Gérer les actions
-    document.getElementById('cancelImport').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    document.getElementById('confirmImport').addEventListener('click', () => {
-        // Remplacer les données
-        guests = data.guests;
-        tables = data.tables;
-        
-        // Sauvegarder et mettre à jour l'affichage
-        saveData();
-        updateGuestList();
-        updateTables();
-        updateStats();
-        
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-        showNotification('Données importées avec succès');
-    });
-}
-
-// Afficher une notification avec option d'erreur
-function showNotification(message, isError = false) {
-    // Supprimer les notifications existantes
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(n => {
-        n.classList.remove('show');
-        setTimeout(() => n.remove(), 300);
-    });
-    
-    // Créer une notification temporaire
-    const notification = document.createElement('div');
-    notification.className = `notification ${isError ? 'error' : ''}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    // Afficher avec animation
-    setTimeout(() => notification.classList.add('show'), 10);
-    
-    // Supprimer après 3 secondes
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-
-// Gestion de la navigation
-function initNavigation() {
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('.section');
-
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const target = button.getAttribute('data-target');
-            
-            navButtons.forEach(btn => btn.classList.remove('active'));
-            sections.forEach(section => section.classList.remove('active'));
-            
-            button.classList.add('active');
-            document.getElementById(target).classList.add('active');
-        });
-    });
-
-    // Activer la première section par défaut
-    navButtons[0].click();
-}
-
-// Gestion des invités
-function initGuestForm() {
-    // Initialiser l'option couple
-    const isCouple = document.getElementById('isCouple');
-    const partnerField = document.getElementById('partnerField');
-    
-    isCouple.addEventListener('change', () => {
-        partnerField.classList.toggle('hidden', !isCouple.checked);
-        
-        // Rendre le champ du partenaire requis ou non
-        const partnerName = document.getElementById('partnerName');
-        partnerName.required = isCouple.checked;
-    });
-    
-    // Formulaire d'ajout d'invité
-    const form = document.getElementById('guestForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const isPartOfCouple = isCouple.checked;
-        const guestName = document.getElementById('guestName').value;
-        const status = document.getElementById('guestStatus').value;
-        
-        const guest = {
-            id: Date.now(),
-            name: guestName,
-            status: status,
-            isCouple: isPartOfCouple,
-            partner: isPartOfCouple ? document.getElementById('partnerName').value : null
+    // Fonction pour exporter les données
+    function exportData() {
+        const data = {
+            guests: guests,
+            tables: tables,
+            version: '1.0'
         };
         
-        guests.push(guest);
-        saveData();
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         
-        form.reset();
-        partnerField.classList.add('hidden');
-        updateGuestList();
-        updateStats();
+        const exportFileDefaultName = `invites-anniversaire-${new Date().toISOString().slice(0,10)}.json`;
         
-        // Animation et notification
-        const message = isPartOfCouple ? 'Couple ajouté avec succès!' : 'Invité ajouté avec succès!';
-        showNotification(message);
-    });
-}
-
-function updateGuestList(filter = 'all') {
-    const guestsList = document.getElementById('guestsList');
-    guestsList.innerHTML = '';
-    
-    // Filtrer les invités selon le critère
-    let filteredGuests;
-    
-    if (filter === 'couple') {
-        filteredGuests = guests.filter(guest => guest.isCouple);
-    } else if (filter === 'all') {
-        filteredGuests = guests;
-    } else {
-        filteredGuests = guests.filter(guest => guest.status === filter);
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        
+        showNotification("Données exportées avec succès");
     }
     
-    if (filteredGuests.length === 0) {
-        guestsList.innerHTML = `
-            <div class="empty-list">
-                <i class="fas fa-user-slash"></i>
-                <p>Aucun invité dans cette catégorie</p>
-            </div>
-        `;
-        return;
-    }
-    
-    filteredGuests.forEach(guest => {
-        const card = document.createElement('div');
-        card.className = 'guest-card';
+    // Fonction pour importer des données
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
         
-        // Définir la classe du statut
-        let statusClass = '';
-        if (guest.status === 'confirmed') statusClass = 'confirmed';
-        if (guest.status === 'declined') statusClass = 'declined';
-        
-        // Traduire le statut
-        let statusText = 'En attente';
-        if (guest.status === 'confirmed') statusText = 'Confirmé';
-        if (guest.status === 'declined') statusText = 'Ne vient pas';
-        
-        // Préparer le HTML pour l'affichage du partenaire
-        let partnerHtml = '';
-        if (guest.isCouple && guest.partner) {
-            partnerHtml = `
-                <span class="badge-couple"><i class="fas fa-heart"></i> Couple</span>
-                <div class="partner-name">avec ${guest.partner}</div>
-            `;
-        }
-        
-        card.innerHTML = `
-            <div class="guest-info">
-                <strong>${guest.name}</strong> ${partnerHtml}
-                <span class="status ${statusClass}">${statusText}</span>
-            </div>
-            <div class="guest-actions">
-                <button onclick="editGuest(${guest.id})"><i class="fas fa-edit"></i></button>
-                <button onclick="deleteGuest(${guest.id})"><i class="fas fa-trash"></i></button>
-            </div>
-        `;
-        guestsList.appendChild(card);
-    });
-}
-
-function initFilters() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const filter = button.getAttribute('data-filter');
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            updateGuestList(filter);
-        });
-    });
-}
-
-function editGuest(id) {
-    const guest = guests.find(g => g.id === id);
-    if (!guest) return;
-    
-    // Créer une boîte de dialogue modale au lieu d'utiliser prompt
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    
-    // Définir le HTML pour l'option du partenaire
-    const partnerOptions = guest.isCouple 
-        ? `
-            <div class="couple-option">
-                <input type="checkbox" id="editIsCouple" class="toggle-checkbox" checked>
-                <label for="editIsCouple" class="toggle-label">Couple</label>
-            </div>
-            <div id="editPartnerField">
-                <label for="editPartnerName">Nom du/de la partenaire</label>
-                <input type="text" id="editPartnerName" value="${guest.partner || ''}" required>
-            </div>
-        ` 
-        : `
-            <div class="couple-option">
-                <input type="checkbox" id="editIsCouple" class="toggle-checkbox">
-                <label for="editIsCouple" class="toggle-label">Couple</label>
-            </div>
-            <div id="editPartnerField" class="hidden">
-                <label for="editPartnerName">Nom du/de la partenaire</label>
-                <input type="text" id="editPartnerName" placeholder="Nom du/de la partenaire">
-            </div>
-        `;
-    
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Modifier l'invité</h3>
-            <form id="editForm">
-                <label for="editName">Nom</label>
-                <input type="text" id="editName" value="${guest.name}" required>
-                <label for="editStatus">Statut</label>
-                <select id="editStatus">
-                    <option value="pending" ${guest.status === 'pending' ? 'selected' : ''}>En attente</option>
-                    <option value="confirmed" ${guest.status === 'confirmed' ? 'selected' : ''}>Confirmé</option>
-                    <option value="declined" ${guest.status === 'declined' ? 'selected' : ''}>Ne vient pas</option>
-                </select>
-                ${partnerOptions}
-                <button type="submit">Enregistrer</button>
-            </form>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    // Gérer la case à cocher pour le couple
-    const editIsCouple = document.getElementById('editIsCouple');
-    const editPartnerField = document.getElementById('editPartnerField');
-    const editPartnerName = document.getElementById('editPartnerName');
-    
-    editIsCouple.addEventListener('change', () => {
-        editPartnerField.classList.toggle('hidden', !editIsCouple.checked);
-        editPartnerName.required = editIsCouple.checked;
-    });
-    
-    // Gérer la fermeture
-    const close = modal.querySelector('.close');
-    close.addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    // Gérer la soumission
-    const form = modal.querySelector('#editForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        guest.name = document.getElementById('editName').value;
-        guest.status = document.getElementById('editStatus').value;
-        guest.isCouple = editIsCouple.checked;
-        guest.partner = editIsCouple.checked ? editPartnerName.value : null;
-        
-        saveData();
-        updateGuestList();
-        updateStats();
-        updateTables(); // Mettre à jour les tables au cas où un invité assigné change de statut
-        
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-        showNotification('Invité modifié avec succès!');
-    });
-}
-
-function deleteGuest(id) {
-    const guest = guests.find(g => g.id === id);
-    if (!guest) return;
-    
-    // Créer une boîte de dialogue de confirmation modale
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    
-    // Message personnalisé pour les couples
-    const message = guest.isCouple && guest.partner
-        ? `Êtes-vous sûr de vouloir supprimer le couple "${guest.name} & ${guest.partner}" ?`
-        : `Êtes-vous sûr de vouloir supprimer "${guest.name}" ?`;
-    
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Confirmation</h3>
-            <p>${message}</p>
-            <div class="modal-actions">
-                <button id="cancelDelete">Annuler</button>
-                <button id="confirmDelete" class="danger">Supprimer</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    // Gérer la fermeture
-    modal.querySelector('.close').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    // Gérer les actions
-    document.getElementById('cancelDelete').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    document.getElementById('confirmDelete').addEventListener('click', () => {
-        // Supprimer des tables si assigné
-        tables.forEach(table => {
-            table.seats = table.seats.map(seat => 
-                seat && seat.id === id ? null : seat
-            );
-        });
-        
-        // Supprimer de la liste
-        guests = guests.filter(g => g.id !== id);
-        
-        saveData();
-        updateGuestList();
-        updateTables();
-        updateStats();
-        
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-        showNotification(guest.isCouple ? 'Couple supprimé avec succès!' : 'Invité supprimé avec succès!');
-    });
-}
-
-// Gestion des tables
-function initTableControls() {
-    const addTableBtn = document.getElementById('addTable');
-    const seatsInput = document.getElementById('seatsPerTable');
-    
-    addTableBtn.addEventListener('click', () => {
-        const seats = parseInt(seatsInput.value);
-        if (seats > 0) {
-            addTable(seats);
-        }
-    });
-    
-    // Initialiser l'affichage des tables
-    updateTables();
-}
-
-function addTable(seatsCount) {
-    const table = {
-        id: Date.now(),
-        seats: Array(seatsCount).fill(null),
-        number: tables.length + 1
-    };
-    
-    tables.push(table);
-    saveData();
-    updateTables();
-    showNotification('Table ajoutée avec succès!');
-}
-
-function updateTables() {
-    const tablesContainer = document.getElementById('tablesContainer');
-    tablesContainer.innerHTML = '';
-    
-    if (tables.length === 0) {
-        tablesContainer.innerHTML = `
-            <div class="empty-list">
-                <i class="fas fa-chair"></i>
-                <p>Aucune table n'a été créée</p>
-            </div>
-        `;
-        return;
-    }
-    
-    tables.forEach(table => {
-        const tableElement = document.createElement('div');
-        tableElement.className = 'table';
-        tableElement.innerHTML = `
-            <h3>Table ${table.number}</h3>
-            <div class="seats">
-                ${table.seats.map((seat, index) => {
-                    let seatContent = '<i class="fas fa-plus"></i>';
-                    let seatClass = "";
-                    let personName = "";
-                    
-                    if (seat) {
-                        seatClass = "occupied";
-                        
-                        // Pour les membres d'un couple, on affiche les deux personnes séparément
-                        if (seat.isCouple && seat.partner) {
-                            if (seat.seatPart === 'partner') {
-                                personName = seat.partner;
-                            } else {
-                                personName = seat.name;
-                            }
-                        } else {
-                            personName = seat.name;
-                        }
-                        
-                        seatContent = personName;
-                    }
-                    
-                    return `
-                        <div class="seat ${seatClass}" 
-                             onclick="assignGuest(${table.id}, ${index})">
-                            ${seatContent}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-            <button class="delete-table" onclick="deleteTable(${table.id})">
-                <i class="fas fa-trash"></i> Supprimer cette table
-            </button>
-        `;
-        tablesContainer.appendChild(tableElement);
-    });
-}
-
-function deleteTable(tableId) {
-    const tableIndex = tables.findIndex(t => t.id === tableId);
-    if (tableIndex === -1) return;
-    
-    // Créer une boîte de dialogue de confirmation modale
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Confirmation</h3>
-            <p>Êtes-vous sûr de vouloir supprimer la table ${tables[tableIndex].number} ?</p>
-            <div class="modal-actions">
-                <button id="cancelDelete">Annuler</button>
-                <button id="confirmDelete" class="danger">Supprimer</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    // Gérer la fermeture
-    modal.querySelector('.close').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    // Gérer les actions
-    document.getElementById('cancelDelete').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    document.getElementById('confirmDelete').addEventListener('click', () => {
-        tables.splice(tableIndex, 1);
-        
-        // Renumérote les tables
-        tables.forEach((table, idx) => {
-            table.number = idx + 1;
-        });
-        
-        saveData();
-        updateTables();
-        
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-        showNotification('Table supprimée avec succès!');
-    });
-}
-
-function assignGuest(tableId, seatIndex) {
-    const table = tables.find(t => t.id === tableId);
-    if (!table) return;
-    
-    if (table.seats[seatIndex]) {
-        // Libérer la place
-        const seatToRemove = table.seats[seatIndex];
-        
-        // Si c'est un couple, on libère les deux sièges
-        if (seatToRemove.isCouple && seatToRemove.partner) {
-            const guestId = seatToRemove.id;
-            
-            // Parcourir tous les sièges pour trouver les deux membres du couple
-            table.seats = table.seats.map(seat => 
-                seat && seat.id === guestId ? null : seat
-            );
-        } else {
-            table.seats[seatIndex] = null;
-        }
-        
-        saveData();
-        updateTables();
-        return;
-    }
-    
-    // Filtrer les invités disponibles (confirmés et pas déjà assignés)
-    const availableGuests = guests.filter(g => 
-        g.status === 'confirmed' && 
-        !tables.some(t => t.seats.some(seat => seat && seat.id === g.id))
-    );
-    
-    if (availableGuests.length === 0) {
-        showNotification('Aucun invité confirmé disponible');
-        return;
-    }
-    
-    // Afficher une modale pour sélectionner un invité
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Assigner un invité</h3>
-            <p class="couple-note">Note: Les couples occupent deux places.</p>
-            <div class="guest-select">
-                ${availableGuests.map(guest => {
-                    // Afficher le statut couple
-                    const coupleInfo = guest.isCouple && guest.partner 
-                        ? `<span class="badge-couple"><i class="fas fa-heart"></i> Couple</span><div class="partner-name">avec ${guest.partner}</div>` 
-                        : '';
-                    
-                    return `
-                        <div class="guest-option" data-id="${guest.id}">
-                            ${guest.name} ${coupleInfo}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-    
-    // Gérer la fermeture
-    modal.querySelector('.close').addEventListener('click', () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    });
-    
-    // Gérer la sélection d'un invité
-    const options = modal.querySelectorAll('.guest-option');
-    options.forEach(option => {
-        option.addEventListener('click', () => {
-            const guestId = parseInt(option.getAttribute('data-id'));
-            const guest = guests.find(g => g.id === guestId);
-            
-            if (guest) {
-                // Pour les couples, on occupe deux places
-                if (guest.isCouple && guest.partner) {
-                    // Vérifier s'il y a deux places disponibles consécutives
-                    let hasSpace = false;
-                    let secondSeatIndex = -1;
-                    
-                    // Chercher la place suivante si elle existe
-                    if (seatIndex < table.seats.length - 1 && !table.seats[seatIndex + 1]) {
-                        secondSeatIndex = seatIndex + 1;
-                        hasSpace = true;
-                    } 
-                    // Sinon chercher la place précédente
-                    else if (seatIndex > 0 && !table.seats[seatIndex - 1]) {
-                        secondSeatIndex = seatIndex - 1;
-                        hasSpace = true;
-                    }
-                    
-                    if (!hasSpace) {
-                        showNotification('Il faut deux places libres consécutives pour un couple', true);
-                        modal.classList.remove('show');
-                        setTimeout(() => modal.remove(), 300);
-                        return;
-                    }
-                    
-                    // Créer une copie pour le partenaire avec une référence au siège occupé
-                    const guestCopy = {...guest};
-                    const partnerCopy = {...guest, seatPart: 'partner'};
-                    
-                    // Assigner le couple aux deux sièges
-                    table.seats[seatIndex] = guestCopy;
-                    table.seats[secondSeatIndex] = partnerCopy;
-                } else {
-                    // Pour un invité solo, on occupe une seule place
-                    table.seats[seatIndex] = guest;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                // Valider la structure des données
+                if (!data.guests || !Array.isArray(data.guests) || 
+                    !data.tables || !Array.isArray(data.tables)) {
+                    throw new Error("Format de fichier invalide");
                 }
                 
-                saveData();
-                updateTables();
-                modal.classList.remove('show');
-                setTimeout(() => modal.remove(), 300);
+                // Afficher la confirmation
+                showImportConfirmation(data);
+                
+            } catch (err) {
+                showNotification("Erreur lors de l'importation : " + err.message, true);
             }
-        });
-    });
-}
-
-// Mise à jour des statistiques
-function updateStats() {
-    const total = guests.length;
-    const confirmed = guests.filter(g => g.status === 'confirmed').length;
-    const pending = guests.filter(g => g.status === 'pending').length;
-    const declined = guests.filter(g => g.status === 'declined').length;
-    const couples = guests.filter(g => g.isCouple).length;
-    
-    document.getElementById('totalGuests').textContent = total;
-    document.getElementById('confirmedGuests').textContent = confirmed;
-    document.getElementById('pendingGuests').textContent = pending;
-    document.getElementById('declinedGuests').textContent = declined;
-    
-    // Ajouter le nombre de couples aux statistiques
-    if (document.getElementById('coupleCount')) {
-        document.getElementById('coupleCount').textContent = couples;
+            
+            // Réinitialiser l'input file
+            event.target.value = '';
+        };
+        reader.readAsText(file);
     }
     
-    // Recalculer la hauteur du footer après la mise à jour des statistiques
-    setTimeout(adjustContentHeight, 100);
-}
+    // Fonction pour afficher la confirmation d'importation
+    function showImportConfirmation(data) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Confirmer l'importation</h3>
+                <p>Vous êtes sur le point d'importer :</p>
+                <ul>
+                    <li>${data.guests.length} invités</li>
+                    <li>${data.tables.length} tables</li>
+                </ul>
+                <p>Cette action remplacera toutes vos données actuelles. Voulez-vous continuer ?</p>
+                <div class="modal-actions">
+                    <button class="secondary" id="cancel-import">Annuler</button>
+                    <button id="confirm-import">Confirmer</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('show'), 10);
+        
+        // Événements
+        modal.querySelector('.close').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        });
+        
+        modal.querySelector('#cancel-import').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        });
+        
+        modal.querySelector('#confirm-import').addEventListener('click', () => {
+            // Importer les données
+            guests = data.guests;
+            tables = data.tables;
+            saveData();
+            
+            // Mettre à jour l'interface
+            updateGuestList();
+            updateTables();
+            updateStats();
+            
+            // Fermer le modal
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+            
+            showNotification("Données importées avec succès");
+        });
+    }
+    
+    // Fonction pour initialiser la navigation
+    function initNavigation() {
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const sections = document.querySelectorAll('.section');
+        
+        navButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const target = this.dataset.target;
+                
+                // Mettre à jour les boutons
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Afficher la section
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === target) {
+                        section.classList.add('active');
+                    }
+                });
+                
+                // Mettre à jour les tables si nécessaire
+                if (target === 'tables-section') {
+                    updateTables();
+                }
+            });
+        });
+    }
+    
+    // Fonction pour initialiser le formulaire d'ajout d'invité
+    function initGuestForm() {
+        const form = document.getElementById('guest-form');
+        if (!form) return;
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const nameInput = document.getElementById('name');
+            const statusInput = document.getElementById('status');
+            const coupleToggle = document.getElementById('couple');
+            const partnerInput = document.getElementById('partner-name');
+            
+            // Valider les entrées
+            if (!nameInput.value.trim()) {
+                showNotification("Veuillez entrer un nom", true);
+                return;
+            }
+            
+            const guestId = form.dataset.editing || Date.now().toString();
+            const isCouple = coupleToggle && coupleToggle.checked;
+            
+            const guest = {
+                id: guestId,
+                name: nameInput.value.trim(),
+                status: statusInput.value,
+                isCouple: isCouple,
+                partnerName: isCouple ? partnerInput.value.trim() : '',
+                tableId: null,
+                seatIndex: null
+            };
+            
+            // Ajouter ou mettre à jour
+            if (form.dataset.editing) {
+                const index = guests.findIndex(g => g.id === guestId);
+                if (index !== -1) {
+                    // Conserver le placement à table
+                    guest.tableId = guests[index].tableId;
+                    guest.seatIndex = guests[index].seatIndex;
+                    guests[index] = guest;
+                }
+                delete form.dataset.editing;
+                form.querySelector('button[type="submit"]').textContent = 'Ajouter';
+            } else {
+                guests.push(guest);
+            }
+            
+            // Sauvegarder et mettre à jour
+            saveData();
+            form.reset();
+            
+            // Cacher le champ partenaire si visible
+            if (partnerInput && !partnerInput.classList.contains('hidden')) {
+                partnerInput.parentElement.classList.add('hidden');
+            }
+            
+            updateGuestList();
+            updateStats();
+            
+            showNotification("Invité " + (form.dataset.editing ? "modifié" : "ajouté") + " avec succès");
+        });
+    }
+    
+    // Fonction pour mettre à jour la liste des invités
+    function updateGuestList(filter = 'all') {
+        const guestList = document.getElementById('guest-list');
+        if (!guestList) return;
+        
+        // Filtrer les invités
+        let filteredGuests = guests;
+        if (filter !== 'all') {
+            filteredGuests = guests.filter(guest => guest.status === filter);
+        }
+        
+        // Mettre à jour les filtres actifs
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        
+        // Vider la liste
+        guestList.innerHTML = '';
+        
+        if (filteredGuests.length === 0) {
+            guestList.innerHTML = `
+                <div class="empty-list">
+                    <i class="fas fa-user-slash"></i>
+                    <p>Aucun invité ${filter !== 'all' ? 'avec ce statut' : ''}</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Remplir la liste
+        filteredGuests.forEach(guest => {
+            const card = document.createElement('div');
+            card.className = 'guest-card';
+            card.innerHTML = `
+                <div class="guest-info">
+                    <div>
+                        <strong>${guest.name}</strong>
+                        ${guest.isCouple ? `<span class="badge-couple"><i class="fas fa-heart"></i> +1</span>` : ''}
+                    </div>
+                    ${guest.isCouple && guest.partnerName ? `<div class="partner-name">avec ${guest.partnerName}</div>` : ''}
+                    <span class="status ${guest.status}">${
+                        guest.status === 'pending' ? 'En attente' :
+                        guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'
+                    }</span>
+                </div>
+                <div class="guest-actions">
+                    <button class="icon-btn edit-guest" data-id="${guest.id}"><i class="fas fa-edit"></i></button>
+                    <button class="icon-btn danger delete-guest" data-id="${guest.id}"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            
+            guestList.appendChild(card);
+        });
+        
+        // Ajouter les événements
+        document.querySelectorAll('.edit-guest').forEach(btn => {
+            btn.addEventListener('click', () => editGuest(btn.dataset.id));
+        });
+        
+        document.querySelectorAll('.delete-guest').forEach(btn => {
+            btn.addEventListener('click', () => deleteGuest(btn.dataset.id));
+        });
+    }
+    
+    // Fonction pour initialiser les filtres
+    function initFilters() {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                updateGuestList(this.dataset.filter);
+            });
+        });
+    }
+    
+    // Fonction pour éditer un invité
+    function editGuest(id) {
+        const guest = guests.find(g => g.id === id);
+        if (!guest) return;
+        
+        const form = document.getElementById('guest-form');
+        const nameInput = document.getElementById('name');
+        const statusInput = document.getElementById('status');
+        const coupleToggle = document.getElementById('couple');
+        const partnerInput = document.getElementById('partner-name');
+        const partnerField = document.getElementById('partner-field');
+        
+        form.dataset.editing = id;
+        nameInput.value = guest.name;
+        statusInput.value = guest.status;
+        
+        if (coupleToggle) {
+            coupleToggle.checked = guest.isCouple;
+            partnerField.classList.toggle('hidden', !guest.isCouple);
+            
+            if (guest.isCouple && partnerInput) {
+                partnerInput.value = guest.partnerName || '';
+            }
+        }
+        
+        form.querySelector('button[type="submit"]').textContent = 'Modifier';
+        
+        // Faire défiler jusqu'au formulaire
+        form.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Fonction pour supprimer un invité
+    function deleteGuest(id) {
+        const guest = guests.find(g => g.id === id);
+        if (!guest) return;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Confirmer la suppression</h3>
+                <p>Êtes-vous sûr de vouloir supprimer ${guest.name} ${guest.isCouple ? `et ${guest.partnerName || 'son/sa partenaire'}` : ''} ?</p>
+                <div class="modal-actions">
+                    <button class="secondary" id="cancel-delete">Annuler</button>
+                    <button class="danger" id="confirm-delete">Supprimer</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('show'), 10);
+        
+        // Événements
+        modal.querySelector('.close').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        });
+        
+        modal.querySelector('#cancel-delete').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        });
+        
+        modal.querySelector('#confirm-delete').addEventListener('click', () => {
+            // Supprimer l'invité
+            const index = guests.findIndex(g => g.id === id);
+            if (index !== -1) {
+                // Si l'invité est placé à une table, libérer la place
+                const guest = guests[index];
+                if (guest.tableId !== null && guest.seatIndex !== null) {
+                    const table = tables.find(t => t.id === guest.tableId);
+                    if (table && table.seats[guest.seatIndex]) {
+                        table.seats[guest.seatIndex].guestId = null;
+                    }
+                }
+                
+                guests.splice(index, 1);
+                saveData();
+                updateGuestList();
+                updateTables();
+                updateStats();
+            }
+            
+            // Fermer le modal
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+            
+            showNotification("Invité supprimé avec succès");
+        });
+    }
+    
+    // Fonction pour initialiser les contrôles de tables
+    function initTableControls() {
+        const tableForm = document.getElementById('table-form');
+        if (!tableForm) return;
+        
+        tableForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const seatsInput = document.getElementById('seats-count');
+            const seatsCount = parseInt(seatsInput.value);
+            
+            if (isNaN(seatsCount) || seatsCount < 1 || seatsCount > 20) {
+                showNotification("Veuillez entrer un nombre de places valide (1-20)", true);
+                return;
+            }
+            
+            addTable(seatsCount);
+            tableForm.reset();
+        });
+    }
+    
+    // Fonction pour ajouter une table
+    function addTable(seatsCount) {
+        const tableId = Date.now().toString();
+        
+        const seats = Array(seatsCount).fill().map(() => ({
+            guestId: null
+        }));
+        
+        const table = {
+            id: tableId,
+            seats: seats
+        };
+        
+        tables.push(table);
+        saveData();
+        updateTables();
+        updateStats();
+        
+        showNotification(`Table de ${seatsCount} places ajoutée`);
+    }
+    
+    // Fonction pour mettre à jour l'affichage des tables
+    function updateTables() {
+        const tablesContainer = document.getElementById('tables-container');
+        if (!tablesContainer) return;
+        
+        // Vider le conteneur
+        tablesContainer.innerHTML = '';
+        
+        if (tables.length === 0) {
+            tablesContainer.innerHTML = `
+                <div class="empty-list">
+                    <i class="fas fa-chair"></i>
+                    <p>Aucune table</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Afficher les tables
+        tables.forEach((table, tableIndex) => {
+            const tableEl = document.createElement('div');
+            tableEl.className = 'table';
+            tableEl.innerHTML = `
+                <h3>Table ${tableIndex + 1}</h3>
+                <div class="seats" id="table-${table.id}"></div>
+                <button class="delete-table" data-id="${table.id}">Supprimer la table</button>
+            `;
+            
+            tablesContainer.appendChild(tableEl);
+            
+            const seatsContainer = document.getElementById(`table-${table.id}`);
+            
+            // Ajouter les places
+            table.seats.forEach((seat, seatIndex) => {
+                const seatEl = document.createElement('div');
+                seatEl.className = `seat${seat.guestId ? ' occupied' : ''}`;
+                seatEl.dataset.tableId = table.id;
+                seatEl.dataset.seatIndex = seatIndex;
+                
+                // Afficher le nom de l'invité si la place est occupée
+                if (seat.guestId) {
+                    const guest = guests.find(g => g.id === seat.guestId);
+                    if (guest) {
+                        seatEl.textContent = guest.name;
+                        if (guest.isCouple) {
+                            seatEl.textContent += guest.partnerName ? ` & ${guest.partnerName}` : ' +1';
+                        }
+                    }
+                } else {
+                    seatEl.textContent = 'Libre';
+                }
+                
+                seatsContainer.appendChild(seatEl);
+                
+                // Événement de clic sur la place
+                seatEl.addEventListener('click', function() {
+                    // Si la place est occupée, la libérer
+                    if (seat.guestId) {
+                        const guest = guests.find(g => g.id === seat.guestId);
+                        if (guest) {
+                            guest.tableId = null;
+                            guest.seatIndex = null;
+                            seat.guestId = null;
+                            saveData();
+                            updateTables();
+                            updateStats();
+                            showNotification("Place libérée");
+                        }
+                    } else {
+                        // Sinon, ouvrir le modal pour assigner un invité
+                        assignGuest(table.id, seatIndex);
+                    }
+                });
+            });
+            
+            // Événement pour supprimer la table
+            tableEl.querySelector('.delete-table').addEventListener('click', function() {
+                const tableId = this.dataset.id;
+                
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Confirmer la suppression</h3>
+                        <p>Êtes-vous sûr de vouloir supprimer cette table ?</p>
+                        <div class="modal-actions">
+                            <button class="secondary" id="cancel-delete">Annuler</button>
+                            <button class="danger" id="confirm-delete">Supprimer</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                setTimeout(() => modal.classList.add('show'), 10);
+                
+                // Événements
+                modal.querySelector('.close').addEventListener('click', () => {
+                    modal.classList.remove('show');
+                    setTimeout(() => modal.remove(), 300);
+                });
+                
+                modal.querySelector('#cancel-delete').addEventListener('click', () => {
+                    modal.classList.remove('show');
+                    setTimeout(() => modal.remove(), 300);
+                });
+                
+                modal.querySelector('#confirm-delete').addEventListener('click', () => {
+                    // Supprimer la table
+                    const index = tables.findIndex(t => t.id === tableId);
+                    if (index !== -1) {
+                        // Libérer les invités assis à cette table
+                        const table = tables[index];
+                        table.seats.forEach((seat, i) => {
+                            if (seat.guestId) {
+                                const guest = guests.find(g => g.id === seat.guestId);
+                                if (guest) {
+                                    guest.tableId = null;
+                                    guest.seatIndex = null;
+                                }
+                            }
+                        });
+                        
+                        tables.splice(index, 1);
+                        saveData();
+                        updateTables();
+                        updateStats();
+                    }
+                    
+                    // Fermer le modal
+                    modal.classList.remove('show');
+                    setTimeout(() => modal.remove(), 300);
+                    
+                    showNotification("Table supprimée avec succès");
+                });
+            });
+        });
+    }
+    
+    // Fonction pour assigner un invité à une place
+    function assignGuest(tableId, seatIndex) {
+        // Filtrer les invités sans place assignée
+        const availableGuests = guests.filter(guest => guest.tableId === null);
+        
+        if (availableGuests.length === 0) {
+            showNotification("Aucun invité disponible", true);
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Assigner un invité</h3>
+                <p>Choisissez un invité à placer :</p>
+                ${availableGuests.some(g => g.isCouple) ? 
+                    `<p class="couple-note">Note: Les couples occuperont une seule place.</p>` : ''}
+                <div class="guest-select"></div>
+            </div>
+        `;
+        
+        // Ajouter les options d'invités
+        const guestSelect = modal.querySelector('.guest-select');
+        availableGuests.forEach(guest => {
+            const option = document.createElement('div');
+            option.className = 'guest-option';
+            option.dataset.id = guest.id;
+            option.innerHTML = `
+                <strong>${guest.name}</strong>
+                ${guest.isCouple ? `<span class="badge-couple"><i class="fas fa-heart"></i> +1</span>` : ''}
+                ${guest.isCouple && guest.partnerName ? `<div class="partner-name">avec ${guest.partnerName}</div>` : ''}
+                <span class="status ${guest.status}">${
+                    guest.status === 'pending' ? 'En attente' :
+                    guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'
+                }</span>
+            `;
+            
+            guestSelect.appendChild(option);
+            
+            // Événement de clic sur l'option
+            option.addEventListener('click', function() {
+                const guestId = this.dataset.id;
+                const guest = guests.find(g => g.id === guestId);
+                if (guest) {
+                    // Assigner l'invité à la place
+                    guest.tableId = tableId;
+                    guest.seatIndex = seatIndex;
+                    
+                    // Mettre à jour la place
+                    const table = tables.find(t => t.id === tableId);
+                    if (table && table.seats[seatIndex]) {
+                        table.seats[seatIndex].guestId = guestId;
+                    }
+                    
+                    saveData();
+                    updateTables();
+                    updateStats();
+                    
+                    showNotification(`${guest.name} assigné à la place`);
+                }
+                
+                // Fermer le modal
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
+            });
+        });
+        
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('show'), 10);
+        
+        // Événement pour fermer le modal
+        modal.querySelector('.close').addEventListener('click', () => {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        });
+    }
+    
+    // Fonction pour mettre à jour les statistiques
+    function updateStats() {
+        // Compter les invités par statut
+        const totalGuests = guests.length;
+        const confirmedGuests = guests.filter(g => g.status === 'confirmed').length;
+        const pendingGuests = guests.filter(g => g.status === 'pending').length;
+        const declinedGuests = guests.filter(g => g.status === 'declined').length;
+        
+        // Compter les invités placés
+        const seatedGuests = guests.filter(g => g.tableId !== null).length;
+        
+        // Compter les places totales et disponibles
+        const totalSeats = tables.reduce((total, table) => total + table.seats.length, 0);
+        const availableSeats = totalSeats - seatedGuests;
+        
+        // Mettre à jour les statistiques
+        document.getElementById('total-guests').textContent = totalGuests;
+        document.getElementById('confirmed-guests').textContent = confirmedGuests;
+        document.getElementById('pending-guests').textContent = pendingGuests;
+        document.getElementById('declined-guests').textContent = declinedGuests;
+        document.getElementById('seated-guests').textContent = seatedGuests;
+        document.getElementById('total-seats').textContent = totalSeats;
+        document.getElementById('available-seats').textContent = availableSeats;
+    }
+    
+    // Fonction pour afficher une notification
+    function showNotification(message, isError = false) {
+        const notification = document.createElement('div');
+        notification.className = `notification${isError ? ' error' : ''}`;
+        notification.textContent = message;
+        
+        // Ajuster la position en fonction du footer
+        const footer = document.querySelector('footer');
+        if (footer) {
+            notification.style.bottom = `${footer.offsetHeight + 10}px`;
+        }
+        
+        document.body.appendChild(notification);
+        
+        // Afficher
+        setTimeout(() => notification.classList.add('show'), 10);
+        
+        // Cacher et supprimer après 3 secondes
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+});
