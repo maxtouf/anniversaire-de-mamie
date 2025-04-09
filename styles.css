@@ -440,6 +440,7 @@ button:hover {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     margin-bottom: 2rem;
+    overflow: hidden;
 }
 
 .u-table-visualizer {
@@ -460,7 +461,7 @@ button:hover {
 
 .u-table {
     position: relative;
-    margin: 0 auto;
+    margin: 30px auto;
     width: 100%;
     height: 100%;
 }
@@ -510,6 +511,7 @@ button:hover {
     font-size: 0.9rem;
     overflow: hidden;
     text-overflow: ellipsis;
+    z-index: 10;
 }
 
 .u-table-seat:hover {
