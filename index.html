@@ -13,6 +13,7 @@
         <nav>
             <button class="nav-btn active" data-target="guests"><i class="fas fa-users"></i> Invités</button>
             <button class="nav-btn" data-target="tables"><i class="fas fa-chair"></i> Tables</button>
+            <button class="nav-btn" data-target="u-table"><i class="fas fa-border-all"></i> Table en U</button>
         </nav>
     </header>
 
@@ -63,6 +64,33 @@
                 </div>
             </div>
             <div id="tablesContainer" class="tables-container"></div>
+        </section>
+
+        <!-- Section Table en U -->
+        <section id="u-table" class="section">
+            <div class="u-table-controls">
+                <h2><i class="fas fa-border-all"></i> Configuration de la table en U</h2>
+                <div class="u-table-form">
+                    <div class="u-table-side">
+                        <label for="leftSideSeats">Places côté gauche</label>
+                        <input type="number" id="leftSideSeats" value="8" min="2" max="20">
+                    </div>
+                    <div class="u-table-side">
+                        <label for="bottomSideSeats">Places côté bas</label>
+                        <input type="number" id="bottomSideSeats" value="6" min="2" max="20">
+                    </div>
+                    <div class="u-table-side">
+                        <label for="rightSideSeats">Places côté droit</label>
+                        <input type="number" id="rightSideSeats" value="8" min="2" max="20">
+                    </div>
+                    <button id="updateUTable"><i class="fas fa-sync-alt"></i> Mettre à jour</button>
+                </div>
+            </div>
+            <div class="u-table-container">
+                <div id="uTableVisualizer" class="u-table-visualizer">
+                    <div class="u-table-helper">Configurez le nombre de places et cliquez sur "Mettre à jour"</div>
+                </div>
+            </div>
         </section>
     </main>
 
