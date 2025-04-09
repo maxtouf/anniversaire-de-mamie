@@ -199,25 +199,46 @@ function initNavigation() {
 
 // Gestion des invités
 function initGuestForm() {
+    // Initialiser l'option couple
+    const isCouple = document.getElementById('isCouple');
+    const partnerField = document.getElementById('partnerField');
+    
+    isCouple.addEventListener('change', () => {
+        partnerField.classList.toggle('hidden', !isCouple.checked);
+        
+        // Rendre le champ du partenaire requis ou non
+        const partnerName = document.getElementById('partnerName');
+        partnerName.required = isCouple.checked;
+    });
+    
+    // Formulaire d'ajout d'invité
     const form = document.getElementById('guestForm');
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
+        const isPartOfCouple = isCouple.checked;
+        const guestName = document.getElementById('guestName').value;
+        const status = document.getElementById('guestStatus').value;
+        
         const guest = {
             id: Date.now(),
-            name: document.getElementById('guestName').value,
-            status: document.getElementById('guestStatus').value
+            name: guestName,
+            status: status,
+            isCouple: isPartOfCouple,
+            partner: isPartOfCouple ? document.getElementById('partnerName').value : null
         };
         
         guests.push(guest);
         saveData();
         
         form.reset();
+        partnerField.classList.add('hidden');
         updateGuestList();
         updateStats();
         
         // Animation et notification
-        showNotification('Invité ajouté avec succès!');
+        const message = isPartOfCouple ? 'Couple ajouté avec succès!' : 'Invité ajouté avec succès!';
+        showNotification(message);
     });
 }
 
@@ -225,9 +246,16 @@ function updateGuestList(filter = 'all') {
     const guestsList = document.getElementById('guestsList');
     guestsList.innerHTML = '';
     
-    const filteredGuests = filter === 'all' 
-        ? guests 
-        : guests.filter(guest => guest.status === filter);
+    // Filtrer les invités selon le critère
+    let filteredGuests;
+    
+    if (filter === 'couple') {
+        filteredGuests = guests.filter(guest => guest.isCouple);
+    } else if (filter === 'all') {
+        filteredGuests = guests;
+    } else {
+        filteredGuests = guests.filter(guest => guest.status === filter);
+    }
     
     if (filteredGuests.length === 0) {
         guestsList.innerHTML = `
@@ -253,9 +281,18 @@ function updateGuestList(filter = 'all') {
         if (guest.status === 'confirmed') statusText = 'Confirmé';
         if (guest.status === 'declined') statusText = 'Ne vient pas';
         
+        // Préparer le HTML pour l'affichage du partenaire
+        let partnerHtml = '';
+        if (guest.isCouple && guest.partner) {
+            partnerHtml = `
+                <span class="badge-couple"><i class="fas fa-heart"></i> Couple</span>
+                <div class="partner-name">avec ${guest.partner}</div>
+            `;
+        }
+        
         card.innerHTML = `
             <div class="guest-info">
-                <strong>${guest.name}</strong>
+                <strong>${guest.name}</strong> ${partnerHtml}
                 <span class="status ${statusClass}">${statusText}</span>
             </div>
             <div class="guest-actions">
@@ -286,6 +323,30 @@ function editGuest(id) {
     // Créer une boîte de dialogue modale au lieu d'utiliser prompt
     const modal = document.createElement('div');
     modal.className = 'modal';
+    
+    // Définir le HTML pour l'option du partenaire
+    const partnerOptions = guest.isCouple 
+        ? `
+            <div class="couple-option">
+                <input type="checkbox" id="editIsCouple" class="toggle-checkbox" checked>
+                <label for="editIsCouple" class="toggle-label">Couple</label>
+            </div>
+            <div id="editPartnerField">
+                <label for="editPartnerName">Nom du/de la partenaire</label>
+                <input type="text" id="editPartnerName" value="${guest.partner || ''}" required>
+            </div>
+        ` 
+        : `
+            <div class="couple-option">
+                <input type="checkbox" id="editIsCouple" class="toggle-checkbox">
+                <label for="editIsCouple" class="toggle-label">Couple</label>
+            </div>
+            <div id="editPartnerField" class="hidden">
+                <label for="editPartnerName">Nom du/de la partenaire</label>
+                <input type="text" id="editPartnerName" placeholder="Nom du/de la partenaire">
+            </div>
+        `;
+    
     modal.innerHTML = `
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -299,12 +360,23 @@ function editGuest(id) {
                     <option value="confirmed" ${guest.status === 'confirmed' ? 'selected' : ''}>Confirmé</option>
                     <option value="declined" ${guest.status === 'declined' ? 'selected' : ''}>Ne vient pas</option>
                 </select>
+                ${partnerOptions}
                 <button type="submit">Enregistrer</button>
             </form>
         </div>
     `;
     
     document.body.appendChild(modal);
+    
+    // Gérer la case à cocher pour le couple
+    const editIsCouple = document.getElementById('editIsCouple');
+    const editPartnerField = document.getElementById('editPartnerField');
+    const editPartnerName = document.getElementById('editPartnerName');
+    
+    editIsCouple.addEventListener('change', () => {
+        editPartnerField.classList.toggle('hidden', !editIsCouple.checked);
+        editPartnerName.required = editIsCouple.checked;
+    });
     
     // Gérer la fermeture
     const close = modal.querySelector('.close');
@@ -319,6 +391,8 @@ function editGuest(id) {
         
         guest.name = document.getElementById('editName').value;
         guest.status = document.getElementById('editStatus').value;
+        guest.isCouple = editIsCouple.checked;
+        guest.partner = editIsCouple.checked ? editPartnerName.value : null;
         
         saveData();
         updateGuestList();
@@ -337,10 +411,16 @@ function deleteGuest(id) {
     // Créer une boîte de dialogue de confirmation modale
     const modal = document.createElement('div');
     modal.className = 'modal';
+    
+    // Message personnalisé pour les couples
+    const message = guest.isCouple && guest.partner
+        ? `Êtes-vous sûr de vouloir supprimer le couple "${guest.name} & ${guest.partner}" ?`
+        : `Êtes-vous sûr de vouloir supprimer "${guest.name}" ?`;
+    
     modal.innerHTML = `
         <div class="modal-content">
             <h3>Confirmation</h3>
-            <p>Êtes-vous sûr de vouloir supprimer "${guest.name}" ?</p>
+            <p>${message}</p>
             <div class="modal-actions">
                 <button id="cancelDelete">Annuler</button>
                 <button id="confirmDelete" class="danger">Supprimer</button>
@@ -372,7 +452,7 @@ function deleteGuest(id) {
         updateStats();
         
         modal.remove();
-        showNotification('Invité supprimé avec succès!');
+        showNotification(guest.isCouple ? 'Couple supprimé avec succès!' : 'Invité supprimé avec succès!');
     });
 }
 
@@ -425,12 +505,22 @@ function updateTables() {
         tableElement.innerHTML = `
             <h3>Table ${table.number}</h3>
             <div class="seats">
-                ${table.seats.map((guest, index) => `
-                    <div class="seat ${guest ? 'occupied' : ''}" 
-                         onclick="assignGuest(${table.id}, ${index})">
-                        ${guest ? guest.name : '<i class="fas fa-plus"></i>'}
-                    </div>
-                `).join('')}
+                ${table.seats.map((guest, index) => {
+                    // Afficher le nom de l'invité ou du couple
+                    let seatContent = '<i class="fas fa-plus"></i>';
+                    if (guest) {
+                        seatContent = guest.isCouple && guest.partner 
+                            ? `${guest.name}<br><small>& ${guest.partner}</small>` 
+                            : guest.name;
+                    }
+                    
+                    return `
+                        <div class="seat ${guest ? 'occupied' : ''}" 
+                             onclick="assignGuest(${table.id}, ${index})">
+                            ${seatContent}
+                        </div>
+                    `;
+                }).join('')}
             </div>
             <button class="delete-table" onclick="deleteTable(${table.id})">
                 <i class="fas fa-trash"></i> Supprimer cette table
@@ -511,11 +601,18 @@ function assignGuest(tableId, seatIndex) {
         <div class="modal-content">
             <h3>Assigner un invité</h3>
             <div class="guest-select">
-                ${availableGuests.map(guest => `
-                    <div class="guest-option" data-id="${guest.id}">
-                        ${guest.name}
-                    </div>
-                `).join('')}
+                ${availableGuests.map(guest => {
+                    // Afficher le statut couple
+                    const coupleInfo = guest.isCouple && guest.partner 
+                        ? `<span class="badge-couple"><i class="fas fa-heart"></i> Couple</span><div class="partner-name">avec ${guest.partner}</div>` 
+                        : '';
+                    
+                    return `
+                        <div class="guest-option" data-id="${guest.id}">
+                            ${guest.name} ${coupleInfo}
+                        </div>
+                    `;
+                }).join('')}
             </div>
         </div>
     `;
@@ -545,6 +642,7 @@ function updateStats() {
     const confirmed = guests.filter(g => g.status === 'confirmed').length;
     const pending = guests.filter(g => g.status === 'pending').length;
     const declined = guests.filter(g => g.status === 'declined').length;
+    const couples = guests.filter(g => g.isCouple).length;
     
     document.getElementById('totalGuests').textContent = total;
     document.getElementById('confirmedGuests').textContent = confirmed;
