@@ -29,12 +29,12 @@ body {
     line-height: 1.7;
     color: var(--dark-color);
     background-color: var(--background-color);
-    padding-bottom: 100px; /* Space for fixed footer */
+    padding-bottom: 80px; /* Reduced space for fixed footer */
 }
 
 header {
     background-color: var(--light-color);
-    padding: 1.2rem 1.5rem;
+    padding: 1rem 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     position: sticky;
     top: 0;
@@ -594,22 +594,22 @@ button:active {
     font-size: 0.9rem;
 }
 
-/* Footer */
+/* Footer - UPDATED: reduced size */
 footer {
     background: var(--light-color);
-    padding: 1.2rem 1.5rem;
+    padding: 0.8rem 1rem; /* Reduced padding */
     position: fixed;
     bottom: 0;
     width: 100%;
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
-    z-index: 90; /* Below header */
+    box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.05); /* Lighter shadow */
+    z-index: 90;
 }
 
 .stats {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 2.5rem;
+    gap: 1.8rem; /* Reduced gap */
     flex-wrap: wrap;
 }
 
@@ -617,36 +617,36 @@ footer {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.4rem;
-    min-width: 70px; /* Min width for items */
+    gap: 0.3rem; /* Reduced gap */
+    min-width: 65px; /* Smaller min width */
 }
 
 .stat-item i {
     color: var(--primary-color);
-    font-size: 1.3rem;
+    font-size: 1.2rem; /* Smaller icons */
 }
 
 .stat-item span {
-    font-size: 1.5rem;
+    font-size: 1.3rem; /* Smaller numbers */
     font-weight: 600;
     color: var(--secondary-color);
 }
 
 .stat-item label {
-    font-size: 0.8rem;
+    font-size: 0.75rem; /* Smaller labels */
     color: var(--gray-color);
     font-weight: 500;
 }
 
-/* Boutons d'importation/exportation */
+/* Import/Export Buttons */
 .data-controls {
     position: absolute;
-    right: 1.5rem;
+    right: 1.2rem;
     bottom: 50%;
-    transform: translateY(50%); /* Vertically center */
+    transform: translateY(50%);
     display: flex;
-    gap: 0.8rem;
-    opacity: 0.7; /* Slightly more visible */
+    gap: 0.6rem; /* Reduced gap */
+    opacity: 0.7;
     transition: var(--transition);
 }
 
@@ -658,13 +658,13 @@ footer {
     background-color: #e9ecef;
     color: var(--dark-color);
     padding: 0;
-    width: 40px; /* Larger buttons */
-    height: 40px;
+    width: 36px; /* Smaller buttons */
+    height: 36px; /* Smaller buttons */
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    font-size: 1rem;
+    font-size: 0.9rem; /* Smaller icons */
     border: none;
     box-shadow: none;
 }
@@ -675,77 +675,199 @@ footer {
     transform: translateY(-2px);
 }
 
-/* Responsive */
+/* Enhanced Responsive Design */
 @media (max-width: 992px) {
     main {
         padding: 0 1rem;
+        margin-top: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .card, .table {
+        padding: 1.8rem;
     }
     .stats {
-        gap: 1.5rem;
+        gap: 1.2rem;
     }
     .data-controls {
         right: 1rem;
         gap: 0.5rem;
     }
     .icon-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 0.9rem;
+        width: 34px;
+        height: 34px;
+        font-size: 0.85rem;
     }
 }
 
 @media (max-width: 768px) {
     body {
-        padding-bottom: 150px; /* More space for footer */
+        padding-bottom: 120px; /* Reduced space for footer */
     }
-    h1 { font-size: 1.6rem; }
-    h2 { font-size: 1.3rem; }
-    nav { gap: 0.5rem; }
-    .nav-btn { padding: 0.5rem 0.8rem; font-size: 0.9rem; }
+    header {
+        padding: 0.8rem 1rem;
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 1.2rem; }
+    h2 { font-size: 1.3rem; margin-bottom: 1.2rem; }
+    nav { gap: 0.4rem; flex-wrap: wrap; justify-content: center; }
+    .nav-btn { 
+        padding: 0.5rem 0.8rem; 
+        font-size: 0.9rem; 
+        flex: 0 0 auto;
+    }
     form, .u-table-form {
         grid-template-columns: 1fr;
     }
     main {
-        margin-top: 1.5rem;
+        margin-top: 1.2rem;
         margin-bottom: 1rem;
     }
+    .card, .table {
+        padding: 1.5rem;
+        margin-bottom: 1.8rem;
+    }
     footer {
-        padding: 1rem;
+        padding: 0.8rem;
     }
     .stats {
         gap: 1rem;
         justify-content: space-around;
     }
-    .stat-item span { font-size: 1.3rem; }
-    .stat-item label { font-size: 0.75rem; }
+    .stat-item {
+        min-width: auto;
+        width: 60px;
+    }
+    .stat-item span { font-size: 1.2rem; }
+    .stat-item label { font-size: 0.7rem; }
     .data-controls {
         position: static; /* Remove absolute positioning */
         transform: none;
-        margin-top: 1rem;
+        margin-top: 0.8rem;
         justify-content: center;
     }
     .u-table-seat {
-        width: 55px;
-        height: 55px;
+        width: 50px;
+        height: 50px;
         font-size: 0.8rem;
     }
-    .guest-card { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
+    .guest-card { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 0.8rem; 
+        padding: 1rem;
+    }
     .guest-actions { margin-top: 0.5rem; }
+    
+    /* Table adjustments */
+    .table h3 {
+        margin-bottom: 1.2rem;
+        font-size: 1.1rem;
+    }
+    .seats {
+        gap: 0.8rem;
+    }
 }
 
 @media (max-width: 480px) {
+    body {
+        padding-bottom: 100px; /* Further reduced space for footer */
+    }
     h1 { font-size: 1.4rem; }
     h2 { font-size: 1.2rem; }
-    .nav-btn { padding: 0.4rem 0.6rem; font-size: 0.8rem; gap: 0.3rem; }
+    .nav-btn { 
+        padding: 0.4rem 0.6rem; 
+        font-size: 0.8rem; 
+        gap: 0.3rem; 
+    }
     .card, .table {
-        padding: 1.5rem;
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    footer {
+        padding: 0.7rem 0.5rem;
     }
     .stats {
-        gap: 0.8rem;
+        gap: 0.5rem;
     }
-    .stat-item i { font-size: 1.1rem; }
-    .stat-item span { font-size: 1.2rem; }
-    .stat-item label { font-size: 0.7rem; }
+    .stat-item {
+        width: 50px;
+    }
+    .stat-item i { font-size: 1rem; }
+    .stat-item span { font-size: 1.1rem; }
+    .stat-item label { font-size: 0.65rem; }
+    
+    /* Adjusted form elements */
+    input, select {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.9rem;
+    }
+    button {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    
+    /* Compact guest cards */
+    .guest-card {
+        padding: 0.9rem;
+    }
+    .guest-info strong {
+        font-size: 1rem;
+    }
+    .status {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+    }
+    .guest-actions button {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+    
+    /* Seats */
+    .seat, .u-table-seat {
+        padding: 0.8rem;
+        min-height: 50px;
+    }
+}
+
+/* Add support for very small screens */
+@media (max-width: 360px) {
+    body {
+        padding-bottom: 90px;
+    }
+    h1 { font-size: 1.3rem; }
+    h2 { font-size: 1.1rem; }
+    .nav-btn { 
+        padding: 0.3rem 0.5rem; 
+        font-size: 0.75rem;
+    }
+    main {
+        padding: 0 0.8rem;
+    }
+    .card, .table {
+        padding: 1rem;
+    }
+    .stats {
+        gap: 0.4rem;
+    }
+    .stat-item {
+        width: 45px;
+    }
+    .stat-item span { 
+        font-size: 1rem; 
+    }
+    .stat-item label { 
+        font-size: 0.6rem; 
+    }
+    
+    /* Adjust table layout */
+    .seats {
+        gap: 0.5rem;
+    }
+    .seat, .u-table-seat {
+        min-height: 45px;
+        padding: 0.6rem;
+        font-size: 0.8rem;
+    }
 }
 
 
@@ -873,6 +995,23 @@ footer {
     transform: none;
 }
 
+/* Responsive Modal Adjustments */
+@media (max-width: 480px) {
+    .modal-content {
+        padding: 1.5rem;
+        width: 95%;
+    }
+    .modal-content h3 {
+        font-size: 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+    .close {
+        top: 10px;
+        right: 10px;
+        font-size: 1.5rem;
+    }
+}
+
 /* Notification Styles (copied from script.js and integrated here) */
 .notification {
     position: fixed;
@@ -945,4 +1084,14 @@ footer {
     padding: 0.5rem;
     background-color: #fff5f5;
     border-radius: var(--border-radius);
+}
+
+/* Fix for mobile portrait mode scrolling */
+@media (max-width: 768px) and (orientation: portrait) {
+    #guestsList {
+        max-height: 450px;
+    }
+    .guest-select {
+        max-height: 250px;
+    }
 }
