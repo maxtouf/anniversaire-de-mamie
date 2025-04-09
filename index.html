@@ -28,6 +28,13 @@
                         <option value="confirmed">Confirmé</option>
                         <option value="declined">Ne vient pas</option>
                     </select>
+                    <div class="couple-option">
+                        <input type="checkbox" id="isCouple" class="toggle-checkbox">
+                        <label for="isCouple" class="toggle-label">Couple</label>
+                    </div>
+                    <div id="partnerField" class="hidden">
+                        <input type="text" id="partnerName" placeholder="Nom du/de la partenaire">
+                    </div>
                     <button type="submit"><i class="fas fa-plus"></i> Ajouter</button>
                 </form>
             </div>
@@ -39,6 +46,7 @@
                     <button class="filter-btn" data-filter="confirmed">Confirmés</button>
                     <button class="filter-btn" data-filter="pending">En attente</button>
                     <button class="filter-btn" data-filter="declined">Ne vient pas</button>
+                    <button class="filter-btn" data-filter="couple">Couples</button>
                 </div>
                 <div id="guestsList"></div>
             </div>
