@@ -132,13 +132,12 @@ function renderUTable() {
         seatIndex++;
     }
     
-    // Sièges du côté bas
+    // Sièges du côté bas - CORRECTION: S'assurer que les sièges sont sur le fond bleu clair
+    const bottomAreaTop = tableHeight - TABLE_BOTTOM_HEIGHT - SEAT_HEIGHT - 10;
     for (let i = 0; i < uTable.bottomSeats; i++) {
-        // Placer les sièges en dessous du côté bas (pour qu'ils soient à l'extérieur)
         const left = TABLE_SIDE_WIDTH + i * (SEAT_WIDTH + SEAT_SPACING) + 20;
-        const top = tableHeight - TABLE_BOTTOM_HEIGHT - SEAT_HEIGHT - 10;
         
-        const seat = createSeat(seatIndex, left, top);
+        const seat = createSeat(seatIndex, left, bottomAreaTop);
         seat.dataset.position = 'bottom';
         seat.dataset.relativeIndex = i;
         tableDiv.appendChild(seat);
