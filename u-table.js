@@ -95,52 +95,63 @@ function renderUTable() {
     
     // Dimensionner la table en fonction du nombre de sièges
     const maxSideSeats = Math.max(uTable.leftSeats, uTable.rightSeats);
-    const tableHeight = maxSideSeats * 70 + 100; // 70px par siège + espace
+    const tableHeight = maxSideSeats * 70 + 80; // 70px par siège + espace
     const tableWidth = uTable.bottomSeats * 70 + 160; // 70px par siège + espace pour les côtés
     
     tableDiv.style.height = `${tableHeight}px`;
     tableDiv.style.width = `${tableWidth}px`;
     
-    // Ajuster les dimensions des côtés
-    leftSide.style.height = `${tableHeight - 80}px`;
-    rightSide.style.height = `${tableHeight - 80}px`;
-    bottomSide.style.width = `${tableWidth - 160}px`;
-    
-    // Créer et positionner les sièges
-    let seatIndex = 0;
-    
-    // Sièges du côté gauche
-    for (let i = 0; i < uTable.leftSeats; i++) {
-        const seat = createSeat(seatIndex, leftSide.offsetWidth + 10, i * 70 + 10);
-        seat.dataset.position = 'left';
-        seat.dataset.relativeIndex = i;
-        container.appendChild(seat);
-        seatIndex++;
-    }
-    
-    // Sièges du côté bas
-    for (let i = 0; i < uTable.bottomSeats; i++) {
-        const seat = createSeat(seatIndex, leftSide.offsetWidth + 80 + i * 70, tableHeight - 80 - 10 - 60);
-        seat.dataset.position = 'bottom';
-        seat.dataset.relativeIndex = i;
-        container.appendChild(seat);
-        seatIndex++;
-    }
-    
-    // Sièges du côté droit
-    for (let i = 0; i < uTable.rightSeats; i++) {
-        const seat = createSeat(seatIndex, tableWidth - rightSide.offsetWidth - 10 - 60, i * 70 + 10);
-        seat.dataset.position = 'right';
-        seat.dataset.relativeIndex = i;
-        container.appendChild(seat);
-        seatIndex++;
-    }
-    
-    // Ajouter une légende
-    const legend = document.createElement('div');
-    legend.className = 'u-table-legend';
-    legend.textContent = "Cliquez sur un siège pour y assigner un invité";
-    container.appendChild(legend);
+    // Attendre que la table soit rendue pour obtenir les dimensions correctes
+    setTimeout(() => {
+        // Ajuster les dimensions des côtés
+        const leftSideWidth = 80; // Largeur fixe du côté gauche
+        const rightSideWidth = 80; // Largeur fixe du côté droit
+        leftSide.style.height = `${tableHeight - 80}px`;
+        leftSide.style.width = `${leftSideWidth}px`;
+        rightSide.style.height = `${tableHeight - 80}px`;
+        rightSide.style.width = `${rightSideWidth}px`;
+        bottomSide.style.width = `${tableWidth - leftSideWidth - rightSideWidth}px`;
+        
+        // Créer et positionner les sièges
+        let seatIndex = 0;
+        
+        // Sièges du côté gauche
+        for (let i = 0; i < uTable.leftSeats; i++) {
+            // Placer les sièges à gauche du côté gauche (pour qu'ils soient à l'extérieur de la table)
+            const seat = createSeat(seatIndex, 10, i * 70 + 10);
+            seat.dataset.position = 'left';
+            seat.dataset.relativeIndex = i;
+            container.appendChild(seat);
+            seatIndex++;
+        }
+        
+        // Sièges du côté bas
+        const bottomStart = leftSideWidth; // Commencer après le côté gauche
+        for (let i = 0; i < uTable.bottomSeats; i++) {
+            // Placer les sièges en dessous du côté bas
+            const seat = createSeat(seatIndex, bottomStart + i * 70 + 10, tableHeight - 80 - 10 - 60);
+            seat.dataset.position = 'bottom';
+            seat.dataset.relativeIndex = i;
+            container.appendChild(seat);
+            seatIndex++;
+        }
+        
+        // Sièges du côté droit
+        for (let i = 0; i < uTable.rightSeats; i++) {
+            // Placer les sièges à droite du côté droit
+            const seat = createSeat(seatIndex, tableWidth - 10 - 60, i * 70 + 10);
+            seat.dataset.position = 'right';
+            seat.dataset.relativeIndex = i;
+            container.appendChild(seat);
+            seatIndex++;
+        }
+        
+        // Ajouter une légende
+        const legend = document.createElement('div');
+        legend.className = 'u-table-legend';
+        legend.textContent = "Cliquez sur un siège pour y assigner un invité";
+        container.appendChild(legend);
+    }, 10);
 }
 
 // Créer un siège individuel
