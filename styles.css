@@ -472,7 +472,17 @@ button:hover {
     border-radius: 4px;
 }
 
+.u-table-left {
+    left: 0;
+    top: 0;
+}
+
+.u-table-right {
+    top: 0;
+}
+
 .u-table-bottom {
+    left: 80px; /* Aligner avec le côté gauche */
     bottom: 0;
     height: 80px;
 }
