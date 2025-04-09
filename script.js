@@ -505,17 +505,30 @@ function updateTables() {
         tableElement.innerHTML = `
             <h3>Table ${table.number}</h3>
             <div class="seats">
-                ${table.seats.map((guest, index) => {
-                    // Afficher le nom de l'invité ou du couple
+                ${table.seats.map((seat, index) => {
                     let seatContent = '<i class="fas fa-plus"></i>';
-                    if (guest) {
-                        seatContent = guest.isCouple && guest.partner 
-                            ? `${guest.name}<br><small>& ${guest.partner}</small>` 
-                            : guest.name;
+                    let seatClass = "";
+                    let personName = "";
+                    
+                    if (seat) {
+                        seatClass = "occupied";
+                        
+                        // Pour les membres d'un couple, on affiche les deux personnes séparément
+                        if (seat.isCouple && seat.partner) {
+                            if (seat.seatPart === 'partner') {
+                                personName = seat.partner;
+                            } else {
+                                personName = seat.name;
+                            }
+                        } else {
+                            personName = seat.name;
+                        }
+                        
+                        seatContent = personName;
                     }
                     
                     return `
-                        <div class="seat ${guest ? 'occupied' : ''}" 
+                        <div class="seat ${seatClass}" 
                              onclick="assignGuest(${table.id}, ${index})">
                             ${seatContent}
                         </div>
@@ -577,7 +590,20 @@ function assignGuest(tableId, seatIndex) {
     
     if (table.seats[seatIndex]) {
         // Libérer la place
-        table.seats[seatIndex] = null;
+        const seatToRemove = table.seats[seatIndex];
+        
+        // Si c'est un couple, on libère les deux sièges
+        if (seatToRemove.isCouple && seatToRemove.partner) {
+            const guestId = seatToRemove.id;
+            
+            // Parcourir tous les sièges pour trouver les deux membres du couple
+            table.seats = table.seats.map(seat => 
+                seat && seat.id === guestId ? null : seat
+            );
+        } else {
+            table.seats[seatIndex] = null;
+        }
+        
         saveData();
         updateTables();
         return;
@@ -600,6 +626,7 @@ function assignGuest(tableId, seatIndex) {
     modal.innerHTML = `
         <div class="modal-content">
             <h3>Assigner un invité</h3>
+            <p class="couple-note">Note: Les couples occupent deux places.</p>
             <div class="guest-select">
                 ${availableGuests.map(guest => {
                     // Afficher le statut couple
@@ -627,7 +654,41 @@ function assignGuest(tableId, seatIndex) {
             const guest = guests.find(g => g.id === guestId);
             
             if (guest) {
-                table.seats[seatIndex] = guest;
+                // Pour les couples, on occupe deux places
+                if (guest.isCouple && guest.partner) {
+                    // Vérifier s'il y a deux places disponibles consécutives
+                    let hasSpace = false;
+                    let secondSeatIndex = -1;
+                    
+                    // Chercher la place suivante si elle existe
+                    if (seatIndex < table.seats.length - 1 && !table.seats[seatIndex + 1]) {
+                        secondSeatIndex = seatIndex + 1;
+                        hasSpace = true;
+                    } 
+                    // Sinon chercher la place précédente
+                    else if (seatIndex > 0 && !table.seats[seatIndex - 1]) {
+                        secondSeatIndex = seatIndex - 1;
+                        hasSpace = true;
+                    }
+                    
+                    if (!hasSpace) {
+                        showNotification('Il faut deux places libres consécutives pour un couple', true);
+                        modal.remove();
+                        return;
+                    }
+                    
+                    // Créer une copie pour le partenaire avec une référence au siège occupé
+                    const guestCopy = {...guest};
+                    const partnerCopy = {...guest, seatPart: 'partner'};
+                    
+                    // Assigner le couple aux deux sièges
+                    table.seats[seatIndex] = guestCopy;
+                    table.seats[secondSeatIndex] = partnerCopy;
+                } else {
+                    // Pour un invité solo, on occupe une seule place
+                    table.seats[seatIndex] = guest;
+                }
+                
                 saveData();
                 updateTables();
                 modal.remove();
@@ -746,6 +807,13 @@ document.head.insertAdjacentHTML('beforeend', `
 
 .delete-table:hover {
     background-color: var(--danger-color);
+}
+
+.couple-note {
+    color: var(--accent-color);
+    font-style: italic;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
 }
 </style>
 `);
