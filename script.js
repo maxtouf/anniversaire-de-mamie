@@ -138,6 +138,7 @@ function showImportConfirmation(data) {
     modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
+            <span class="close">&times;</span>
             <h3>Confirmer l'importation</h3>
             <p>Cette action remplacera toutes vos données actuelles.</p>
             <p>Exportées le: ${new Date(data.exportDate || Date.now()).toLocaleString()}</p>
@@ -152,10 +153,18 @@ function showImportConfirmation(data) {
     `;
     
     document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+    
+    // Gérer la fermeture
+    modal.querySelector('.close').addEventListener('click', () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    });
     
     // Gérer les actions
     document.getElementById('cancelImport').addEventListener('click', () => {
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
     });
     
     document.getElementById('confirmImport').addEventListener('click', () => {
@@ -169,13 +178,21 @@ function showImportConfirmation(data) {
         updateTables();
         updateStats();
         
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
         showNotification('Données importées avec succès');
     });
 }
 
 // Afficher une notification avec option d'erreur
 function showNotification(message, isError = false) {
+    // Supprimer les notifications existantes
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(n => {
+        n.classList.remove('show');
+        setTimeout(() => n.remove(), 300);
+    });
+    
     // Créer une notification temporaire
     const notification = document.createElement('div');
     notification.className = `notification ${isError ? 'error' : ''}`;
@@ -383,6 +400,7 @@ function editGuest(id) {
     `;
     
     document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
     
     // Gérer la case à cocher pour le couple
     const editIsCouple = document.getElementById('editIsCouple');
@@ -397,7 +415,8 @@ function editGuest(id) {
     // Gérer la fermeture
     const close = modal.querySelector('.close');
     close.addEventListener('click', () => {
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
     });
     
     // Gérer la soumission
@@ -415,7 +434,8 @@ function editGuest(id) {
         updateStats();
         updateTables(); // Mettre à jour les tables au cas où un invité assigné change de statut
         
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
         showNotification('Invité modifié avec succès!');
     });
 }
@@ -435,6 +455,7 @@ function deleteGuest(id) {
     
     modal.innerHTML = `
         <div class="modal-content">
+            <span class="close">&times;</span>
             <h3>Confirmation</h3>
             <p>${message}</p>
             <div class="modal-actions">
@@ -445,10 +466,18 @@ function deleteGuest(id) {
     `;
     
     document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+    
+    // Gérer la fermeture
+    modal.querySelector('.close').addEventListener('click', () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    });
     
     // Gérer les actions
     document.getElementById('cancelDelete').addEventListener('click', () => {
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
     });
     
     document.getElementById('confirmDelete').addEventListener('click', () => {
@@ -467,7 +496,8 @@ function deleteGuest(id) {
         updateTables();
         updateStats();
         
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
         showNotification(guest.isCouple ? 'Couple supprimé avec succès!' : 'Invité supprimé avec succès!');
     });
 }
@@ -568,6 +598,7 @@ function deleteTable(tableId) {
     modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
+            <span class="close">&times;</span>
             <h3>Confirmation</h3>
             <p>Êtes-vous sûr de vouloir supprimer la table ${tables[tableIndex].number} ?</p>
             <div class="modal-actions">
@@ -578,10 +609,18 @@ function deleteTable(tableId) {
     `;
     
     document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+    
+    // Gérer la fermeture
+    modal.querySelector('.close').addEventListener('click', () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    });
     
     // Gérer les actions
     document.getElementById('cancelDelete').addEventListener('click', () => {
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
     });
     
     document.getElementById('confirmDelete').addEventListener('click', () => {
@@ -595,7 +634,8 @@ function deleteTable(tableId) {
         saveData();
         updateTables();
         
-        modal.remove();
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
         showNotification('Table supprimée avec succès!');
     });
 }
@@ -641,6 +681,7 @@ function assignGuest(tableId, seatIndex) {
     modal.className = 'modal';
     modal.innerHTML = `
         <div class="modal-content">
+            <span class="close">&times;</span>
             <h3>Assigner un invité</h3>
             <p class="couple-note">Note: Les couples occupent deux places.</p>
             <div class="guest-select">
@@ -661,6 +702,13 @@ function assignGuest(tableId, seatIndex) {
     `;
     
     document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+    
+    // Gérer la fermeture
+    modal.querySelector('.close').addEventListener('click', () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    });
     
     // Gérer la sélection d'un invité
     const options = modal.querySelectorAll('.guest-option');
@@ -689,7 +737,8 @@ function assignGuest(tableId, seatIndex) {
                     
                     if (!hasSpace) {
                         showNotification('Il faut deux places libres consécutives pour un couple', true);
-                        modal.remove();
+                        modal.classList.remove('show');
+                        setTimeout(() => modal.remove(), 300);
                         return;
                     }
                     
@@ -707,7 +756,8 @@ function assignGuest(tableId, seatIndex) {
                 
                 saveData();
                 updateTables();
-                modal.remove();
+                modal.classList.remove('show');
+                setTimeout(() => modal.remove(), 300);
             }
         });
     });
@@ -734,148 +784,3 @@ function updateStats() {
     // Recalculer la hauteur du footer après la mise à jour des statistiques
     setTimeout(adjustContentHeight, 100);
 }
-
-// Ajouter ces styles CSS pour les modales
-document.head.insertAdjacentHTML('beforeend', `
-<style>
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.close {
-    float: right;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.danger {
-    background-color: var(--danger-color);
-}
-
-.notification {
-    position: fixed;
-    top: -50px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border-radius: 30px;
-    box-shadow: var(--box-shadow);
-    z-index: 1001;
-    transition: top 0.3s ease;
-}
-
-.notification.show {
-    top: 20px;
-}
-
-.notification.error {
-    background-color: var(--danger-color);
-}
-
-.guest-select {
-    max-height: 300px;
-    overflow-y: auto;
-    margin-top: 1rem;
-}
-
-.guest-option {
-    padding: 0.8rem;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.guest-option:hover {
-    background-color: var(--light-color);
-}
-
-.empty-list {
-    text-align: center;
-    padding: 2rem;
-    color: var(--gray-color);
-}
-
-.empty-list i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.delete-table {
-    margin-top: 1rem;
-    background-color: var(--light-color);
-    color: var(--gray-color);
-}
-
-.delete-table:hover {
-    background-color: var(--danger-color);
-}
-
-.couple-note {
-    color: var(--accent-color);
-    font-style: italic;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-}
-
-.badge-couple {
-    display: inline-flex;
-    align-items: center;
-    background-color: var(--accent-color);
-    color: white;
-    padding: 0.2rem 0.5rem;
-    border-radius: 10px;
-    font-size: 0.8rem;
-    margin-left: 0.5rem;
-}
-
-.badge-couple i {
-    margin-right: 0.3rem;
-}
-
-.partner-name {
-    font-size: 0.9rem;
-    color: var(--gray-color);
-    margin-top: 0.3rem;
-}
-
-@media (max-width: 480px) {
-    .modal-content {
-        padding: 1.5rem;
-    }
-    
-    .notification {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
-    }
-}
-</style>
-`);
