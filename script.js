@@ -714,6 +714,11 @@ function updateStats() {
     document.getElementById('confirmedGuests').textContent = confirmed;
     document.getElementById('pendingGuests').textContent = pending;
     document.getElementById('declinedGuests').textContent = declined;
+    
+    // Ajouter le nombre de couples aux statistiques
+    if (document.getElementById('coupleCount')) {
+        document.getElementById('coupleCount').textContent = couples;
+    }
 }
 
 // Ajouter ces styles CSS pour les modales
@@ -776,6 +781,10 @@ document.head.insertAdjacentHTML('beforeend', `
     top: 20px;
 }
 
+.notification.error {
+    background-color: var(--danger-color);
+}
+
 .guest-select {
     max-height: 300px;
     overflow-y: auto;
@@ -819,6 +828,27 @@ document.head.insertAdjacentHTML('beforeend', `
     font-style: italic;
     margin-top: 0.5rem;
     font-size: 0.9rem;
+}
+
+.badge-couple {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+}
+
+.badge-couple i {
+    margin-right: 0.3rem;
+}
+
+.partner-name {
+    font-size: 0.9rem;
+    color: var(--gray-color);
+    margin-top: 0.3rem;
 }
 </style>
 `);
