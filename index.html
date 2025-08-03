@@ -3,128 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anniversaire de Mamie</title>
+    <title>YGGtorrent Regex Generator pour Autobrr</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header>
-        <h1>Anniversaire de Mamie</h1>
+        <h1><i class="fas fa-search"></i> YGGtorrent Regex Generator</h1>
+        <p class="subtitle">Générateur d'expressions régulières optimisé pour Autobrr</p>
         <nav>
-            <button class="nav-btn active" data-target="guests"><i class="fas fa-users"></i> Invités</button>
-            <button class="nav-btn" data-target="tables"><i class="fas fa-chair"></i> Tables</button>
-            <button class="nav-btn" data-target="u-table"><i class="fas fa-border-all"></i> Table en U</button>
+            <button class="nav-btn active" data-target="generator"><i class="fas fa-cogs"></i> Générateur</button>
+            <button class="nav-btn" data-target="tester"><i class="fas fa-flask"></i> Testeur</button>
+            <button class="nav-btn" data-target="patterns"><i class="fas fa-database"></i> Patterns</button>
         </nav>
     </header>
 
     <main>
-        <!-- Section Liste des invités -->
-        <section id="guests" class="section active">
-            <div class="add-guest">
-                <h2><i class="fas fa-user-plus"></i> Ajouter un invité</h2>
-                <form id="guestForm">
-                    <input type="text" id="guestName" placeholder="Nom de l'invité" required>
-                    <select id="guestStatus">
-                        <option value="pending">En attente</option>
-                        <option value="confirmed">Confirmé</option>
-                        <option value="declined">Ne vient pas</option>
-                    </select>
-                    <div class="couple-option">
-                        <input type="checkbox" id="isCouple" class="toggle-checkbox">
-                        <label for="isCouple" class="toggle-label">Couple</label>
+        <!-- Section Générateur de regex -->
+        <section id="generator" class="section active">
+            <div class="generator-container">
+                <div class="content-type-selector">
+                    <h2><i class="fas fa-film"></i> Type de contenu</h2>
+                    <div class="content-types">
+                        <button class="content-btn active" data-type="serie-tv">
+                            <i class="fas fa-tv"></i>
+                            <span>Série TV</span>
+                        </button>
+                        <button class="content-btn" data-type="animation-serie">
+                            <i class="fas fa-magic"></i>
+                            <span>Animation Série</span>
+                        </button>
+                        <button class="content-btn" data-type="film">
+                            <i class="fas fa-film"></i>
+                            <span>Film</span>
+                        </button>
+                        <button class="content-btn" data-type="documentaire">
+                            <i class="fas fa-book"></i>
+                            <span>Documentaire</span>
+                        </button>
+                        <button class="content-btn" data-type="emission-tv">
+                            <i class="fas fa-broadcast-tower"></i>
+                            <span>Émission TV</span>
+                        </button>
+                        <button class="content-btn" data-type="sport">
+                            <i class="fas fa-trophy"></i>
+                            <span>Sport</span>
+                        </button>
+                        <button class="content-btn" data-type="presse">
+                            <i class="fas fa-newspaper"></i>
+                            <span>Presse</span>
+                        </button>
+                        <button class="content-btn" data-type="app-mobile">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>App Mobile</span>
+                        </button>
                     </div>
-                    <div id="partnerField" class="hidden">
-                        <input type="text" id="partnerName" placeholder="Nom du/de la partenaire">
-                    </div>
-                    <button type="submit"><i class="fas fa-plus"></i> Ajouter</button>
-                </form>
-            </div>
-
-            <div class="guest-list">
-                <h2><i class="fas fa-list"></i> Liste des invités</h2>
-                <div class="filters">
-                    <button class="filter-btn active" data-filter="all">Tous</button>
-                    <button class="filter-btn" data-filter="confirmed">Confirmés</button>
-                    <button class="filter-btn" data-filter="pending">En attente</button>
-                    <button class="filter-btn" data-filter="declined">Ne vient pas</button>
-                    <button class="filter-btn" data-filter="couple">Couples</button>
                 </div>
-                <div id="guestsList"></div>
+
+                <div class="filters-container">
+                    <h2><i class="fas fa-filter"></i> Critères de filtrage</h2>
+                    
+                    <div class="filter-grid">
+                        <!-- Qualité -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-video"></i> Qualité</label>
+                            <div class="filter-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="quality" value="720p">
+                                    <span>720p</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="quality" value="1080p">
+                                    <span>1080p</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="quality" value="2160p">
+                                    <span>2160p/4K</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="quality" value="480p">
+                                    <span>480p</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Langue -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-language"></i> Langue</label>
+                            <div class="filter-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="language" value="FRENCH">
+                                    <span>FRENCH</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="language" value="VOSTFR">
+                                    <span>VOSTFR</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="language" value="MULTi">
+                                    <span>MULTi</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="language" value="VO">
+                                    <span>VO</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Source -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-compact-disc"></i> Source</label>
+                            <div class="filter-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="source" value="WEB">
+                                    <span>WEB</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="source" value="BluRay">
+                                    <span>BluRay</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="source" value="DVD">
+                                    <span>DVD</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="source" value="HDTV">
+                                    <span>HDTV</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Codec -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-microchip"></i> Codec</label>
+                            <div class="filter-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="codec" value="x264">
+                                    <span>x264</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="codec" value="x265">
+                                    <span>x265</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="codec" value="H264">
+                                    <span>H264</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="codec" value="HEVC">
+                                    <span>HEVC</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Saison/Épisode pour séries -->
+                        <div class="filter-group series-only">
+                            <label><i class="fas fa-list-ol"></i> Saison/Épisode</label>
+                            <div class="filter-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="season-episode" value="strict">
+                                    <span>Format strict (S01E01)</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="season-episode" value="flexible">
+                                    <span>Format flexible</span>
+                                </label>
+                            </div>
+                            <div class="season-inputs">
+                                <input type="number" id="seasonMin" placeholder="Saison min" min="1">
+                                <input type="number" id="seasonMax" placeholder="Saison max" min="1">
+                            </div>
+                        </div>
+
+                        <!-- Année -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-calendar"></i> Année</label>
+                            <div class="year-inputs">
+                                <input type="number" id="yearMin" placeholder="Année min" min="1900" max="2030">
+                                <input type="number" id="yearMax" placeholder="Année max" min="1900" max="2030">
+                            </div>
+                        </div>
+
+                        <!-- Release Group -->
+                        <div class="filter-group">
+                            <label><i class="fas fa-users"></i> Release Group</label>
+                            <div class="filter-options">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="release-group" value="capture">
+                                    <span>Capturer le groupe</span>
+                                </label>
+                                <input type="text" id="specificGroup" placeholder="Groupe spécifique (optionnel)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="regex-output">
+                    <h2><i class="fas fa-code"></i> Regex générée</h2>
+                    <div class="regex-container">
+                        <code id="generatedRegex">^.*$</code>
+                        <button id="copyRegex" class="copy-btn" title="Copier la regex">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="regex-explanation">
+                        <h3>Explication :</h3>
+                        <div id="regexExplanation">Sélectionnez des critères pour générer une regex...</div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Section Plan de table -->
-        <section id="tables" class="section">
-            <div class="tables-controls">
-                <h2><i class="fas fa-plus-circle"></i> Nouvelle table</h2>
-                <div class="table-form">
-                    <input type="number" id="seatsPerTable" value="8" min="4" max="12">
-                    <label for="seatsPerTable">places</label>
-                    <button id="addTable"><i class="fas fa-plus"></i> Ajouter</button>
+        <!-- Section Testeur -->
+        <section id="tester" class="section">
+            <div class="tester-container">
+                <h2><i class="fas fa-flask"></i> Testeur de regex</h2>
+                
+                <div class="test-input">
+                    <h3>Regex à tester :</h3>
+                    <input type="text" id="testRegex" placeholder="Entrez votre regex ou utilisez celle générée">
+                    <button id="useGeneratedRegex">Utiliser la regex générée</button>
+                </div>
+
+                <div class="test-examples">
+                    <h3>Exemples de noms YGGtorrent :</h3>
+                    <div class="examples-container">
+                        <div class="example-item">
+                            <input type="text" class="torrent-name" value="The.Institute.2025.S01E05.MULTi.1080p.WEB.H264-LUCKY">
+                            <span class="match-result">❓</span>
+                        </div>
+                        <div class="example-item">
+                            <input type="text" class="torrent-name" value="Witch.Watch.S01E16.MULTi.1080p.WEB-DL.x264-T3KASHi">
+                            <span class="match-result">❓</span>
+                        </div>
+                        <div class="example-item">
+                            <input type="text" class="torrent-name" value="MK.Ultra.2022.VOSTFR.1080p.WEB.AC3.5.1.x264-NOTAG">
+                            <span class="match-result">❓</span>
+                        </div>
+                        <div class="example-item">
+                            <input type="text" class="torrent-name" value="Dans.Ma.Peau.2002.VOF.Bluray.Remux.2160p.HEVC.HDR10.DV.DTS-HDMA.ZatNik07">
+                            <span class="match-result">❓</span>
+                        </div>
+                    </div>
+                    <button id="addExample" class="add-btn">
+                        <i class="fas fa-plus"></i> Ajouter un exemple
+                    </button>
+                </div>
+
+                <div class="test-results">
+                    <h3>Résultats :</h3>
+                    <div id="testResults"></div>
                 </div>
             </div>
-            <div id="tablesContainer" class="tables-container"></div>
         </section>
 
-        <!-- Section Table en U -->
-        <section id="u-table" class="section">
-            <div class="u-table-controls">
-                <h2><i class="fas fa-border-all"></i> Configuration de la table en U</h2>
-                <div class="u-table-form">
-                    <div class="u-table-side">
-                        <label for="leftSideSeats">Places côté gauche</label>
-                        <input type="number" id="leftSideSeats" value="8" min="2" max="20">
+        <!-- Section Patterns -->
+        <section id="patterns" class="section">
+            <div class="patterns-container">
+                <h2><i class="fas fa-database"></i> Base de données des patterns</h2>
+                
+                <div class="patterns-grid">
+                    <div class="pattern-category">
+                        <h3><i class="fas fa-tv"></i> Séries TV</h3>
+                        <div class="pattern-examples">
+                            <div class="pattern-item">
+                                <code>The.Institute.2025.S01E05.MULTi.1080p.WEB.H264-LUCKY</code>
+                                <span class="pattern-desc">Série moderne avec codec H264</span>
+                            </div>
+                            <div class="pattern-item">
+                                <code>All.Rise.S01E16.Prise.d.otage.MULTi.1080p.WEB.H264-THESYNDICATE</code>
+                                <span class="pattern-desc">Série avec titre français</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="u-table-side">
-                        <label for="bottomSideSeats">Places côté bas</label>
-                        <input type="number" id="bottomSideSeats" value="6" min="2" max="20">
+
+                    <div class="pattern-category">
+                        <h3><i class="fas fa-magic"></i> Animation Série</h3>
+                        <div class="pattern-examples">
+                            <div class="pattern-item">
+                                <code>Witch.Watch.S01E16.MULTi.1080p.WEB-DL.x264-T3KASHi</code>
+                                <span class="pattern-desc">Animation avec WEB-DL</span>
+                            </div>
+                            <div class="pattern-item">
+                                <code>My.Dress-Up.Darling.S02E05.VOSTFR.1080p.WEBRiP.x265-ARONA</code>
+                                <span class="pattern-desc">Animation VOSTFR avec x265</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="u-table-side">
-                        <label for="rightSideSeats">Places côté droit</label>
-                        <input type="number" id="rightSideSeats" value="8" min="2" max="20">
+
+                    <div class="pattern-category">
+                        <h3><i class="fas fa-film"></i> Films</h3>
+                        <div class="pattern-examples">
+                            <div class="pattern-item">
+                                <code>Dans.Ma.Peau.2002.VOF.Bluray.Remux.2160p.HEVC.HDR10.DV.DTS-HDMA.ZatNik07</code>
+                                <span class="pattern-desc">Film BluRay 4K avec HDR</span>
+                            </div>
+                            <div class="pattern-item">
+                                <code>MK.Ultra.2022.VOSTFR.1080p.WEB.AC3.5.1.x264-NOTAG</code>
+                                <span class="pattern-desc">Film WEB avec audio surround</span>
+                            </div>
+                        </div>
                     </div>
-                    <button id="updateUTable"><i class="fas fa-sync-alt"></i> Mettre à jour</button>
-                </div>
-            </div>
-            <div class="u-table-container">
-                <div id="uTableVisualizer" class="u-table-visualizer">
-                    <div class="u-table-helper">Configurez le nombre de places et cliquez sur "Mettre à jour"</div>
+
+                    <div class="pattern-category">
+                        <h3><i class="fas fa-book"></i> Documentaires</h3>
+                        <div class="pattern-examples">
+                            <div class="pattern-item">
+                                <code>Les.100.lieux.qu.il.faut.voir.S12E05.03.08.2025.DOC.FRENCH.AD.1080p.WEB.H264-THESYNDICATE</code>
+                                <span class="pattern-desc">Documentaire avec date et marqueur DOC</span>
+                            </div>
+                            <div class="pattern-item">
+                                <code>la.vie.en.fluo.-.briller.pour.survivre.2023.FRENCH.1080p.WEB.X265</code>
+                                <span class="pattern-desc">Documentaire avec tirets</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-category">
+                        <h3><i class="fas fa-trophy"></i> Sport</h3>
+                        <div class="pattern-examples">
+                            <div class="pattern-item">
+                                <code>WWE.SUMMERSLAM.SATURDAY.2025.WEB.VF.1080p.H264</code>
+                                <span class="pattern-desc">Événement sportif WWE</span>
+                            </div>
+                            <div class="pattern-item">
+                                <code>Formule.1.S2025E75.Grand.Prix.Hongrie.Essais.qualificatifs.02.08.2025.FRENCH.1080p.WEB.DDP.x264-THESYNDICATE</code>
+                                <span class="pattern-desc">Formule 1 avec date et descriptif</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-category">
+                        <h3><i class="fas fa-newspaper"></i> Presse</h3>
+                        <div class="pattern-examples">
+                            <div class="pattern-item">
+                                <code>Pack Journaux italiens du 3 août 2025 PDF - IT</code>
+                                <span class="pattern-desc">Pack de journaux avec format PDF</span>
+                            </div>
+                            <div class="pattern-item">
+                                <code>Femme.actuelle.N.2132.02.Août.2025.pdf.fr-G11</code>
+                                <span class="pattern-desc">Magazine avec numéro et date</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
     <footer>
-        <div class="stats">
-            <div class="stat-item">
-                <i class="fas fa-users"></i>
-                <span id="totalGuests">0</span>
-                <label>Total</label>
-            </div>
-            <div class="stat-item">
-                <i class="fas fa-check-circle"></i>
-                <span id="confirmedGuests">0</span>
-                <label>Confirmés</label>
-            </div>
-            <div class="stat-item">
-                <i class="fas fa-clock"></i>
-                <span id="pendingGuests">0</span>
-                <label>En attente</label>
-            </div>
-            <div class="stat-item">
-                <i class="fas fa-times-circle"></i>
-                <span id="declinedGuests">0</span>
-                <label>Refusés</label>
+        <div class="export-controls">
+            <h3><i class="fas fa-download"></i> Export pour Autobrr</h3>
+            <div class="export-buttons">
+                <button id="exportAutobrr" class="export-btn">
+                    <i class="fas fa-file-export"></i> Exporter configuration
+                </button>
+                <button id="savePreset" class="save-btn">
+                    <i class="fas fa-save"></i> Sauvegarder preset
+                </button>
+                <button id="loadPreset" class="load-btn">
+                    <i class="fas fa-folder-open"></i> Charger preset
+                </button>
             </div>
         </div>
-        <div class="data-controls">
-            <button id="exportData" class="icon-btn" title="Exporter les données"><i class="fas fa-download"></i></button>
-            <button id="importData" class="icon-btn" title="Importer des données"><i class="fas fa-upload"></i></button>
-            <input type="file" id="importFile" accept=".json" style="display: none;">
+        <div class="app-info">
+            <p><i class="fas fa-info-circle"></i> YGGtorrent Regex Generator - Optimisé pour Autobrr</p>
         </div>
     </footer>
 
     <script src="script.js"></script>
-    <script src="u-table.js"></script>
 </body>
 </html>
