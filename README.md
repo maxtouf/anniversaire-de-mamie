@@ -1,26 +1,45 @@
-# Anniversaire de Mamie
+# YGGtorrent Regex Generator pour Autobrr
 
-Une application web simple et élégante pour gérer la liste des invités et le plan de table d'un anniversaire.
+Une application web complète pour générer des expressions régulières (regex) compatibles avec Autobrr, spécialement optimisée pour le tracker YGGtorrent.
 
 ## Fonctionnalités
 
-- **Gestion des invités** : Ajout, modification et suppression d'invités
-- **Suivi des statuts** : Confirmé, en attente, refusé
-- **Plan de table** : Création de tables et assignation des invités
-- **Statistiques** : Affichage en temps réel du nombre d'invités par statut
-- **Import/Export** : Sauvegarde et restauration des données
+- **Génération de regex automatique** : Création d'expressions régulières optimisées pour différents types de contenus YGGtorrent
+- **Support multi-contenus** : Animation Série, Documentaire, Émission TV, Film, Sport, Série TV, Presse, Application Smartphone
+- **Filtres avancés** : Qualité, langue, source, codec, audio, groupe de release, saison/épisode, année
+- **Prévisualisation en temps réel** : Visualisation instantanée des regex générées
+- **Test des patterns** : Validation avec des exemples réels de noms de torrents YGGtorrent
+- **Export pour Autobrr** : Configuration directement compatible avec Autobrr
 
 ## Comment utiliser l'application
 
 1. Ouvrez `index.html` dans un navigateur web moderne
-2. Utilisez l'onglet "Invités" pour gérer votre liste d'invités
-3. Utilisez l'onglet "Tables" pour créer des tables et y assigner des invités
-4. Les données sont automatiquement sauvegardées dans le stockage local de votre navigateur
-5. Utilisez les boutons d'import/export en bas à droite pour sauvegarder ou transférer vos données
+2. Sélectionnez le type de contenu (Série, Film, Documentaire, etc.)
+3. Configurez les critères de filtrage selon vos besoins
+4. Visualisez la regex générée en temps réel
+5. Testez la regex avec des exemples de noms de torrents
+6. Exportez la configuration pour l'utiliser dans Autobrr
 
-## Données persistantes
+## Base de données des patterns
 
-L'application utilise le localStorage pour conserver vos données entre les sessions. Vous pouvez également exporter vos données dans un fichier JSON et les réimporter ultérieurement ou sur un autre appareil.
+L'application inclut une base de données complète des formats de nommage courants sur YGGtorrent, permettant une génération précise des expressions régulières pour chaque type de contenu.
+
+## Exemples de regex générées
+
+### Série TV en 1080p FRENCH
+```regex
+^.*\.S\d{2}E\d{2}\..*FRENCH.*1080p.*$
+```
+
+### Film BluRay 1080p
+```regex
+^.*\.(19|20)\d{2}\..*[Bb]lu[Rr]ay.*1080p.*$
+```
+
+### Animation VOSTFR 
+```regex
+^.*\.S\d{2}E\d{2}\..*VOSTFR.*1080p.*$
+```
 
 ## Technologies utilisées
 
@@ -28,7 +47,7 @@ L'application utilise le localStorage pour conserver vos données entre les sess
 - CSS3 (avec variables CSS et flexbox/grid)
 - JavaScript vanilla (ES6+)
 - Font Awesome pour les icônes
-- Stockage local (localStorage)
+- Stockage local (localStorage) pour la persistance des configurations
 
 ## Développement
 
@@ -43,4 +62,4 @@ Pour contribuer au projet :
 
 ## Auteur
 
-Créé avec ❤️ pour célébrer un anniversaire spécial.
+Créé avec ❤️ pour optimiser l'utilisation d'Autobrr avec YGGtorrent.

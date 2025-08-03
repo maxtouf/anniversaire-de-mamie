@@ -1,918 +1,676 @@
-// Initialisation des données
-let guests = JSON.parse(localStorage.getItem('guests')) || [];
-let tables = JSON.parse(localStorage.getItem('tables')) || [];
+// YGGtorrent Regex Generator for Autobrr
+// Application state
+let currentContentType = 'serie-tv';
+let selectedFilters = {
+    quality: [],
+    language: [],
+    source: [],
+    codec: [],
+    seasonEpisode: [],
+    releaseGroup: false,
+    yearMin: null,
+    yearMax: null,
+    seasonMin: null,
+    seasonMax: null,
+    specificGroup: ''
+};
 
-// Sauvegarde des données dans le stockage local
-function saveData() {
-    localStorage.setItem('guests', JSON.stringify(guests));
-    localStorage.setItem('tables', JSON.stringify(tables));
+// YGGtorrent pattern database
+const yggPatterns = {
+    'serie-tv': {
+        examples: [
+            'The.Institute.2025.S01E05.MULTi.1080p.WEB.H264-LUCKY',
+            'All.Rise.S01E16.Prise.d.otage.MULTi.1080p.WEB.H264-THESYNDICATE',
+            'Secret.Story.S13E57.Zone.Secrete.10.FRENCH.1080p.WEB.H264-BTT'
+        ],
+        basePattern: '.*\\.S\\d{2}E\\d{2}\\..*'
+    },
+    'animation-serie': {
+        examples: [
+            'Witch.Watch.S01E16.MULTi.1080p.WEB-DL.x264-T3KASHi',
+            'My.Dress-Up.Darling.S02E05.VOSTFR.1080p.WEBRiP.x265-ARONA'
+        ],
+        basePattern: '.*\\.S\\d{2}E\\d{2}\\..*'
+    },
+    'film': {
+        examples: [
+            'Dans.Ma.Peau.2002.VOF.Bluray.Remux.2160p.HEVC.HDR10.DV.DTS-HDMA.ZatNik07',
+            'MK.Ultra.2022.VOSTFR.1080p.WEB.AC3.5.1.x264-NOTAG'
+        ],
+        basePattern: '.*\\.(19|20)\\d{2}\\..*'
+    },
+    'documentaire': {
+        examples: [
+            'Les.100.lieux.qu.il.faut.voir.S12E05.03.08.2025.DOC.FRENCH.AD.1080p.WEB.H264-THESYNDICATE',
+            'la.vie.en.fluo.-.briller.pour.survivre.2023.FRENCH.1080p.WEB.X265'
+        ],
+        basePattern: '.*(DOC|documentaire|2023|2024|2025).*'
+    },
+    'emission-tv': {
+        examples: [
+            'Secret.Story.S13E57.Zone.Secrete.10.FRENCH.1080p.WEB.H264-BTT',
+            'Fort.Boyard.S36E05.Association.Gregory.Lemarchal.02.08.2025.FRENCH.1080p.WEB.H264-THESYNDICATE'
+        ],
+        basePattern: '.*\\.(S\\d{2}E\\d{2}|\\d{2}\\.\\d{2}\\.\\d{4}).*'
+    },
+    'sport': {
+        examples: [
+            'WWE.SUMMERSLAM.SATURDAY.2025.WEB.VF.1080p.H264',
+            'Formule.1.S2025E75.Grand.Prix.Hongrie.Essais.qualificatifs.02.08.2025.FRENCH.1080p.WEB.DDP.x264-THESYNDICATE'
+        ],
+        basePattern: '.*(WWE|Formule|Football|Tennis|NBA|NHL).*'
+    },
+    'presse': {
+        examples: [
+            'Pack Journaux italiens du 3 août 2025 PDF - IT',
+            'Femme.actuelle.N.2132.02.Août.2025.pdf.fr-G11'
+        ],
+        basePattern: '.*(PDF|Magazine|Journal).*'
+    },
+    'app-mobile': {
+        examples: [
+            '[Android] Waze Magical Unicorn v5.9.90.901 Mod [APK]'
+        ],
+        basePattern: '.*\\[Android\\].*\\[APK\\].*'
+    }
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    initNavigation();
+    initContentTypeSelector();
+    initFilterControls();
+    initTester();
+    initExportControls();
+    updateSeriesVisibility();
+    generateRegex();
+});
+
+// Navigation between sections
+function initNavigation() {
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.section');
+
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const target = button.dataset.target;
+            
+            // Update active navigation
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Update active section
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById(target).classList.add('active');
+        });
+    });
 }
 
-// Initialisation des contrôles d'importation/exportation
-function initDataControls() {
-    document.getElementById('exportBtn').addEventListener('click', exportData);
-    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
-    document.getElementById('importFile').addEventListener('change', importData);
+// Content type selection
+function initContentTypeSelector() {
+    const contentButtons = document.querySelectorAll('.content-btn');
+    
+    contentButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Update active content type
+            contentButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Update current content type
+            currentContentType = button.dataset.type;
+            updateSeriesVisibility();
+            generateRegex();
+            loadContentExamples();
+        });
+    });
 }
 
-// Exportation des données
-function exportData() {
-    const data = {
-        guests: guests,
-        tables: tables,
-        exportDate: new Date().toISOString()
+// Show/hide series-specific controls
+function updateSeriesVisibility() {
+    const seriesControls = document.querySelectorAll('.series-only');
+    const isSeriesType = currentContentType.includes('serie') || currentContentType === 'animation-serie' || currentContentType === 'emission-tv';
+    
+    seriesControls.forEach(control => {
+        control.style.display = isSeriesType ? 'block' : 'none';
+    });
+}
+
+// Initialize filter controls
+function initFilterControls() {
+    // Checkbox filters
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', handleFilterChange);
+    });
+    
+    // Number inputs
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        input.addEventListener('input', handleFilterChange);
+    });
+    
+    // Text inputs
+    const textInputs = document.querySelectorAll('input[type="text"]');
+    textInputs.forEach(input => {
+        if (input.id === 'specificGroup') {
+            input.addEventListener('input', handleFilterChange);
+        }
+    });
+}
+
+// Handle filter changes
+function handleFilterChange() {
+    updateSelectedFilters();
+    generateRegex();
+}
+
+// Update selected filters from form
+function updateSelectedFilters() {
+    // Reset filters
+    selectedFilters = {
+        quality: [],
+        language: [],
+        source: [],
+        codec: [],
+        seasonEpisode: [],
+        releaseGroup: false,
+        yearMin: null,
+        yearMax: null,
+        seasonMin: null,
+        seasonMax: null,
+        specificGroup: ''
     };
     
-    const dataStr = JSON.stringify(data, null, 2);
+    // Collect checkbox values
+    ['quality', 'language', 'source', 'codec', 'season-episode'].forEach(filterType => {
+        const checkboxes = document.querySelectorAll(`input[name="${filterType}"]:checked`);
+        const key = filterType.replace('-', '') === 'seasonepisode' ? 'seasonEpisode' : filterType.replace('-', '');
+        selectedFilters[key] = Array.from(checkboxes).map(cb => cb.value);
+    });
+    
+    // Release group
+    const releaseGroupCheckbox = document.querySelector('input[name="release-group"]:checked');
+    selectedFilters.releaseGroup = !!releaseGroupCheckbox;
+    
+    // Year range
+    selectedFilters.yearMin = document.getElementById('yearMin')?.value || null;
+    selectedFilters.yearMax = document.getElementById('yearMax')?.value || null;
+    
+    // Season range
+    selectedFilters.seasonMin = document.getElementById('seasonMin')?.value || null;
+    selectedFilters.seasonMax = document.getElementById('seasonMax')?.value || null;
+    
+    // Specific group
+    selectedFilters.specificGroup = document.getElementById('specificGroup')?.value || '';
+}
+
+// Generate regex based on current filters
+function generateRegex() {
+    let regexParts = ['^'];
+    let explanation = [];
+    
+    // Start with base pattern for content type
+    const contentPattern = yggPatterns[currentContentType];
+    if (contentPattern) {
+        regexParts.push('.*');
+        
+        // Add year pattern for films
+        if (currentContentType === 'film') {
+            if (selectedFilters.yearMin || selectedFilters.yearMax) {
+                const yearPattern = buildYearPattern();
+                if (yearPattern) {
+                    regexParts.push(yearPattern);
+                    explanation.push(`Année: ${yearPattern}`);
+                }
+            } else {
+                regexParts.push('\\.(19|20)\\d{2}\\.');
+                explanation.push('Année: format standard (1900-2099)');
+            }
+        }
+        
+        // Add season/episode pattern for series
+        if (currentContentType.includes('serie') || currentContentType === 'animation-serie' || currentContentType === 'emission-tv') {
+            const seasonPattern = buildSeasonEpisodePattern();
+            if (seasonPattern) {
+                regexParts.push(seasonPattern);
+                explanation.push(`Saison/Épisode: ${seasonPattern}`);
+            }
+        }
+        
+        regexParts.push('.*');
+        
+        // Add language filter
+        if (selectedFilters.language.length > 0) {
+            const langPattern = `(${selectedFilters.language.join('|')})`;
+            regexParts.push(langPattern);
+            explanation.push(`Langue: ${selectedFilters.language.join(', ')}`);
+            regexParts.push('.*');
+        }
+        
+        // Add quality filter
+        if (selectedFilters.quality.length > 0) {
+            const qualityPattern = `(${selectedFilters.quality.join('|')})`;
+            regexParts.push(qualityPattern);
+            explanation.push(`Qualité: ${selectedFilters.quality.join(', ')}`);
+            regexParts.push('.*');
+        }
+        
+        // Add source filter
+        if (selectedFilters.source.length > 0) {
+            const sourcePattern = `(${selectedFilters.source.map(s => s.replace('Ray', '[Rr]ay')).join('|')})`;
+            regexParts.push(sourcePattern);
+            explanation.push(`Source: ${selectedFilters.source.join(', ')}`);
+            regexParts.push('.*');
+        }
+        
+        // Add codec filter
+        if (selectedFilters.codec.length > 0) {
+            const codecPattern = `(${selectedFilters.codec.join('|')})`;
+            regexParts.push(codecPattern);
+            explanation.push(`Codec: ${selectedFilters.codec.join(', ')}`);
+            regexParts.push('.*');
+        }
+        
+        // Add release group pattern
+        if (selectedFilters.releaseGroup) {
+            if (selectedFilters.specificGroup) {
+                regexParts.push(`-${selectedFilters.specificGroup}`);
+                explanation.push(`Release Group: ${selectedFilters.specificGroup}`);
+            } else {
+                regexParts.push('-[A-Za-z0-9]+');
+                explanation.push('Release Group: capture automatique');
+            }
+        }
+    }
+    
+    regexParts.push('$');
+    
+    // Clean up regex (remove multiple .* sequences)
+    let regex = regexParts.join('').replace(/\.\*\.\*/g, '.*');
+    
+    // Update UI
+    const regexElement = document.getElementById('generatedRegex');
+    const explanationElement = document.getElementById('regexExplanation');
+    
+    if (regexElement) {
+        regexElement.textContent = regex;
+    }
+    
+    if (explanationElement) {
+        explanationElement.innerHTML = 
+            explanation.length > 0 ? explanation.map(e => `• ${e}`).join('<br>') : 'Regex de base pour tous les contenus';
+    }
+    
+    // Update tester if regex is being used there
+    const testRegexInput = document.getElementById('testRegex');
+    if (testRegexInput && testRegexInput.value === '') {
+        testRegexInput.value = regex;
+    }
+}
+
+// Build year pattern
+function buildYearPattern() {
+    const min = selectedFilters.yearMin;
+    const max = selectedFilters.yearMax;
+    
+    if (min && max) {
+        if (min === max) {
+            return `\\.${min}\\.`;
+        } else {
+            // For range, create a more complex pattern
+            return `\\.(${min}|${max}|[0-9]{4})\\.`;
+        }
+    } else if (min) {
+        return `\\.(${min}|[0-9]{4})\\.`;
+    } else if (max) {
+        return `\\.(${max}|[0-9]{4})\\.`;
+    }
+    
+    return null;
+}
+
+// Build season/episode pattern
+function buildSeasonEpisodePattern() {
+    if (selectedFilters.seasonEpisode.includes('strict')) {
+        if (selectedFilters.seasonMin || selectedFilters.seasonMax) {
+            const min = selectedFilters.seasonMin || '01';
+            const max = selectedFilters.seasonMax || '99';
+            return `\\.S[${min.padStart(2, '0')[0]}-${max.padStart(2, '0')[0]}][0-9]E\\d{2}\\.`;
+        } else {
+            return '\\.S\\d{2}E\\d{2}\\.';
+        }
+    } else if (selectedFilters.seasonEpisode.includes('flexible')) {
+        return '\\.(S\\d{2}E\\d{2}|\\d{2}x\\d{2})\\.';
+    }
+    
+    return '\\.S\\d{2}E\\d{2}\\.';
+}
+
+// Initialize tester functionality
+function initTester() {
+    const testRegexInput = document.getElementById('testRegex');
+    const useGeneratedBtn = document.getElementById('useGeneratedRegex');
+    const addExampleBtn = document.getElementById('addExample');
+    
+    if (useGeneratedBtn) {
+        useGeneratedBtn.addEventListener('click', () => {
+            const generatedRegex = document.getElementById('generatedRegex').textContent;
+            testRegexInput.value = generatedRegex;
+            runTests();
+        });
+    }
+    
+    if (addExampleBtn) {
+        addExampleBtn.addEventListener('click', addNewExample);
+    }
+    
+    if (testRegexInput) {
+        testRegexInput.addEventListener('input', runTests);
+    }
+    
+    // Load examples for current content type
+    loadContentExamples();
+}
+
+// Add new example input
+function addNewExample() {
+    const container = document.querySelector('.examples-container');
+    if (!container) return;
+    
+    const newExample = document.createElement('div');
+    newExample.className = 'example-item';
+    newExample.innerHTML = `
+        <input type="text" class="torrent-name" placeholder="Entrez un nom de torrent...">
+        <span class="match-result">❓</span>
+        <button class="remove-example" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    const newInput = newExample.querySelector('.torrent-name');
+    newInput.addEventListener('input', runTests);
+    
+    container.appendChild(newExample);
+}
+
+// Load examples for current content type
+function loadContentExamples() {
+    const examples = yggPatterns[currentContentType]?.examples || [];
+    const inputs = document.querySelectorAll('.torrent-name');
+    
+    inputs.forEach((input, index) => {
+        if (examples[index]) {
+            input.value = examples[index];
+        }
+    });
+    
+    setTimeout(runTests, 100);
+}
+
+// Run regex tests
+function runTests() {
+    const testRegexInput = document.getElementById('testRegex');
+    const resultsDiv = document.getElementById('testResults');
+    
+    if (!testRegexInput || !resultsDiv) return;
+    
+    const testRegex = testRegexInput.value;
+    const torrentInputs = document.querySelectorAll('.torrent-name');
+    
+    if (!testRegex) {
+        resultsDiv.innerHTML = '<p>Entrez une regex pour tester...</p>';
+        return;
+    }
+    
+    let regex;
+    try {
+        regex = new RegExp(testRegex);
+    } catch (e) {
+        resultsDiv.innerHTML = `<p class="error">Regex invalide: ${e.message}</p>`;
+        return;
+    }
+    
+    let matches = 0;
+    let total = 0;
+    let results = [];
+    
+    torrentInputs.forEach(input => {
+        if (input.value.trim()) {
+            total++;
+            const isMatch = regex.test(input.value);
+            const resultSpan = input.parentElement.querySelector('.match-result');
+            
+            if (resultSpan) {
+                if (isMatch) {
+                    matches++;
+                    resultSpan.textContent = '✅';
+                    resultSpan.className = 'match-result match';
+                } else {
+                    resultSpan.textContent = '❌';
+                    resultSpan.className = 'match-result no-match';
+                }
+            }
+            
+            results.push({
+                name: input.value,
+                match: isMatch
+            });
+        }
+    });
+    
+    // Update results summary
+    resultsDiv.innerHTML = `
+        <div class="test-summary">
+            <h4>Résultat: ${matches}/${total} correspondances</h4>
+            <div class="match-percentage" style="width: ${total > 0 ? (matches/total)*100 : 0}%"></div>
+        </div>
+        <div class="detailed-results">
+            ${results.map(r => `
+                <div class="result-item ${r.match ? 'match' : 'no-match'}">
+                    <span class="result-icon">${r.match ? '✅' : '❌'}</span>
+                    <span class="result-name">${r.name}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Initialize export controls
+function initExportControls() {
+    const exportBtn = document.getElementById('exportAutobrr');
+    const saveBtn = document.getElementById('savePreset');
+    const loadBtn = document.getElementById('loadPreset');
+    const copyBtn = document.getElementById('copyRegex');
+    
+    if (exportBtn) exportBtn.addEventListener('click', exportAutobrrConfig);
+    if (saveBtn) saveBtn.addEventListener('click', savePreset);
+    if (loadBtn) loadBtn.addEventListener('click', loadPreset);
+    if (copyBtn) copyBtn.addEventListener('click', copyRegexToClipboard);
+}
+
+// Export configuration for Autobrr
+function exportAutobrrConfig() {
+    const regexElement = document.getElementById('generatedRegex');
+    if (!regexElement) return;
+    
+    const regex = regexElement.textContent;
+    const config = {
+        name: `YGG_${currentContentType}_${Date.now()}`,
+        enabled: true,
+        priority: 10,
+        filter: {
+            shows: currentContentType.includes('serie') ? [regex] : [],
+            movies: currentContentType === 'film' ? [regex] : [],
+            releases: [regex]
+        },
+        indexers: ["ygg"]
+    };
+    
+    const dataStr = JSON.stringify(config, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const dataUrl = URL.createObjectURL(dataBlob);
     
     const downloadLink = document.createElement('a');
     downloadLink.href = dataUrl;
-    downloadLink.download = `anniversaire-invites-${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+    downloadLink.download = `autobrr_ygg_${currentContentType}_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
     
-    showNotification('Données exportées avec succès');
+    showNotification('Configuration Autobrr exportée avec succès !');
 }
 
-// Importation des données
-function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+// Save current preset
+function savePreset() {
+    const presetName = prompt('Nom du preset:', `${currentContentType}_${Date.now()}`);
+    if (!presetName) return;
     
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = JSON.parse(e.target.result);
-            
-            // Validation basique
-            if (!data.guests || !Array.isArray(data.guests) || !data.tables || !Array.isArray(data.tables)) {
-                throw new Error('Format de fichier invalide');
-            }
-            
-            // Afficher une confirmation
-            showImportConfirmation(data);
-            
-        } catch (error) {
-            showNotification(`Erreur: ${error.message}`, true);
-        }
-        
-        // Réinitialiser l'input file
-        event.target.value = '';
+    const regexElement = document.getElementById('generatedRegex');
+    if (!regexElement) return;
+    
+    const preset = {
+        name: presetName,
+        contentType: currentContentType,
+        filters: selectedFilters,
+        regex: regexElement.textContent,
+        date: new Date().toISOString()
     };
     
-    reader.readAsText(file);
+    let presets = JSON.parse(localStorage.getItem('ygg_presets')) || [];
+    presets.push(preset);
+    localStorage.setItem('ygg_presets', JSON.stringify(presets));
+    
+    showNotification(`Preset "${presetName}" sauvegardé !`);
 }
 
-// Afficher la confirmation d'importation
-function showImportConfirmation(data) {
-    const modal = document.getElementById('importConfirmModal');
-    const confirmBtn = document.getElementById('confirmImport');
-    const cancelBtn = document.getElementById('cancelImport');
-    const guestCountEl = document.getElementById('importGuestCount');
-    const tableCountEl = document.getElementById('importTableCount');
-    const dateEl = document.getElementById('importDate');
-    
-    // Mettre à jour les informations
-    guestCountEl.textContent = data.guests.length;
-    tableCountEl.textContent = data.tables.length;
-    
-    // Formater la date d'exportation si disponible
-    if (data.exportDate) {
-        const exportDate = new Date(data.exportDate);
-        dateEl.textContent = exportDate.toLocaleString();
-    } else {
-        dateEl.textContent = 'Non disponible';
-    }
-    
-    // Action de confirmation
-    const confirmAction = () => {
-        // Remplacer les données
-        guests = data.guests;
-        tables = data.tables;
-        saveData();
-        
-        // Mettre à jour l'interface
-        updateGuestList();
-        updateTables();
-        updateStats();
-        
-        showNotification('Données importées avec succès');
-        
-        // Fermer la modal
-        modal.classList.remove('show');
-        
-        // Nettoyer
-        confirmBtn.removeEventListener('click', confirmAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Action d'annulation
-    const cancelAction = () => {
-        modal.classList.remove('show');
-        confirmBtn.removeEventListener('click', confirmAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Ajouter les écouteurs d'événements
-    confirmBtn.addEventListener('click', confirmAction);
-    cancelBtn.addEventListener('click', cancelAction);
-    
-    // Afficher la modal
-    modal.classList.add('show');
-}
-
-// Initialisation de la navigation
-function initNavigation() {
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('section');
-    
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetSection = button.getAttribute('data-section');
-            
-            // Mettre à jour les classes actives
-            navButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            
-            sections.forEach(section => {
-                if (section.id === targetSection) {
-                    section.classList.add('active');
-                } else {
-                    section.classList.remove('active');
-                }
-            });
-            
-            // Actions spécifiques selon la section
-            if (targetSection === 'guests-section') {
-                updateGuestList();
-            } else if (targetSection === 'tables-section') {
-                updateTables();
-            }
-        });
-    });
-}
-
-// Initialisation du formulaire d'invité
-function initGuestForm() {
-    const form = document.getElementById('guestForm');
-    const nameInput = document.getElementById('guestName');
-    const statusSelect = document.getElementById('guestStatus');
-    const coupleCheckbox = document.getElementById('isCouple');
-    const partnerNameInput = document.getElementById('partnerName');
-    
-    // Gérer l'option couple
-    coupleCheckbox.addEventListener('change', function() {
-        const partnerField = document.getElementById('partnerNameField');
-        if (this.checked) {
-            partnerField.classList.remove('hidden');
-        } else {
-            partnerField.classList.add('hidden');
-            partnerNameInput.value = '';
-        }
-    });
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const name = nameInput.value.trim();
-        const status = statusSelect.value;
-        
-        if (!name) {
-            showNotification('Veuillez entrer un nom', true);
-            return;
-        }
-        
-        // Gestion de l'option couple
-        const isCouple = coupleCheckbox.checked;
-        const partnerName = isCouple ? partnerNameInput.value.trim() : '';
-        
-        if (isCouple && !partnerName) {
-            showNotification('Veuillez entrer le nom du partenaire', true);
-            return;
-        }
-        
-        const existingGuestIndex = guests.findIndex(g => g.id === currentEditingGuest);
-        
-        if (existingGuestIndex !== -1) {
-            // Mise à jour d'un invité existant
-            guests[existingGuestIndex].name = name;
-            guests[existingGuestIndex].status = status;
-            guests[existingGuestIndex].isCouple = isCouple;
-            guests[existingGuestIndex].partnerName = partnerName;
-            
-            showNotification('Invité mis à jour avec succès');
-        } else {
-            // Ajout d'un nouvel invité
-            const newGuest = {
-                id: Date.now().toString(),
-                name: name,
-                status: status,
-                isCouple: isCouple,
-                partnerName: partnerName,
-                tableId: null,
-                seatIndex: null
-            };
-            
-            guests.push(newGuest);
-            showNotification('Invité ajouté avec succès');
-        }
-        
-        // Réinitialiser le formulaire
-        form.reset();
-        partnerNameInput.closest('.form-group').classList.add('hidden');
-        currentEditingGuest = null;
-        
-        // Mettre à jour les données et l'affichage
-        saveData();
-        updateGuestList();
-        updateStats();
-    });
-}
-
-// Variable pour suivre l'invité en cours d'édition
-let currentEditingGuest = null;
-
-// Mise à jour de la liste des invités
-function updateGuestList(filter = 'all') {
-    const guestListContainer = document.getElementById('guestList');
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    
-    // Mettre à jour les filtres
-    filterButtons.forEach(btn => {
-        if (btn.getAttribute('data-filter') === filter) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    // Filtrer les invités
-    let filteredGuests = guests;
-    if (filter !== 'all') {
-        filteredGuests = guests.filter(guest => guest.status === filter);
-    }
-    
-    // Vider la liste actuelle
-    guestListContainer.innerHTML = '';
-    
-    // Afficher l'état vide si nécessaire
-    if (filteredGuests.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-list';
-        emptyState.innerHTML = `
-            <i class="fas fa-users-slash"></i>
-            <h3>Aucun invité ${filter !== 'all' ? `avec le statut "${filter}"` : ''}</h3>
-            <p>Ajoutez des invités en utilisant le formulaire ci-dessus</p>
-        `;
-        guestListContainer.appendChild(emptyState);
+// Load preset
+function loadPreset() {
+    const presets = JSON.parse(localStorage.getItem('ygg_presets')) || [];
+    if (presets.length === 0) {
+        showNotification('Aucun preset sauvegardé', 'error');
         return;
     }
     
-    // Créer les cartes d'invités
-    filteredGuests.forEach(guest => {
-        const card = document.createElement('div');
-        card.className = 'guest-card';
-        
-        // Déterminer le label de statut
-        let statusLabel = '';
-        let statusClass = '';
-        
-        switch (guest.status) {
-            case 'pending':
-                statusLabel = 'En attente';
-                statusClass = 'pending';
-                break;
-            case 'confirmed':
-                statusLabel = 'Confirmé';
-                statusClass = 'confirmed';
-                break;
-            case 'declined':
-                statusLabel = 'Décliné';
-                statusClass = 'declined';
-                break;
-        }
-        
-        // Carte d'invité avec ou sans partenaire
-        let partnerHtml = '';
-        if (guest.isCouple && guest.partnerName) {
-            partnerHtml = `
-                <div class="partner-name">
-                    avec <span>${guest.partnerName}</span>
-                </div>
-            `;
-        }
-        
-        // Information sur la table si assignée
-        let tableInfo = '';
-        if (guest.tableId !== null) {
-            const table = tables.find(t => t.id === guest.tableId);
-            if (table) {
-                tableInfo = `<div><small>Table ${table.number}, Place ${guest.seatIndex + 1}</small></div>`;
-            }
-        }
-        
-        card.innerHTML = `
-            <div class="guest-info">
-                <div>
-                    <strong>${guest.name}</strong>
-                    ${guest.isCouple ? '<span class="badge-couple"><i class="fas fa-heart"></i> Couple</span>' : ''}
-                </div>
-                ${partnerHtml}
-                <div class="status ${statusClass}">${statusLabel}</div>
-                ${tableInfo}
-            </div>
-            <div class="guest-actions">
-                <button class="icon-btn secondary edit-guest" data-id="${guest.id}">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="icon-btn danger delete-guest" data-id="${guest.id}">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
-        `;
-        
-        guestListContainer.appendChild(card);
-        
-        // Ajouter les écouteurs d'événements
-        card.querySelector('.edit-guest').addEventListener('click', () => editGuest(guest.id));
-        card.querySelector('.delete-guest').addEventListener('click', () => deleteGuest(guest.id));
-    });
-}
-
-// Initialisation des filtres
-function initFilters() {
-    const filterButtons = document.querySelectorAll('.filter-btn');
+    const presetNames = presets.map((p, i) => `${i}: ${p.name} (${p.contentType})`);
+    const selection = prompt(`Choisissez un preset:\n${presetNames.join('\n')}\n\nEntrez le numéro:`);
     
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const filter = button.getAttribute('data-filter');
-            updateGuestList(filter);
-        });
-    });
-}
-
-// Édition d'un invité
-function editGuest(id) {
-    const guest = guests.find(g => g.id === id);
-    if (!guest) return;
+    if (selection === null) return;
     
-    document.getElementById('guestName').value = guest.name;
-    document.getElementById('guestStatus').value = guest.status;
-    
-    // Gestion de l'option couple
-    const coupleCheckbox = document.getElementById('isCouple');
-    const partnerField = document.getElementById('partnerNameField');
-    
-    coupleCheckbox.checked = guest.isCouple;
-    if (guest.isCouple) {
-        partnerField.classList.remove('hidden');
-        document.getElementById('partnerName').value = guest.partnerName || '';
-    } else {
-        partnerField.classList.add('hidden');
-    }
-    
-    // Mettre à jour la variable d'édition
-    currentEditingGuest = id;
-    
-    // Faire défiler jusqu'au formulaire
-    document.getElementById('guestForm').scrollIntoView({ behavior: 'smooth' });
-}
-
-// Suppression d'un invité
-function deleteGuest(id) {
-    const guest = guests.find(g => g.id === id);
-    if (!guest) return;
-    
-    const modal = document.getElementById('deleteConfirmModal');
-    const confirmBtn = document.getElementById('confirmDelete');
-    const cancelBtn = document.getElementById('cancelDelete');
-    const guestNameEl = document.getElementById('deleteGuestName');
-    
-    // Mettre à jour le nom
-    guestNameEl.textContent = guest.name;
-    
-    // Action de confirmation
-    const confirmAction = () => {
-        // Supprimer l'invité des tables s'il est assigné
-        if (guest.tableId) {
-            const table = tables.find(t => t.id === guest.tableId);
-            if (table && table.seats[guest.seatIndex] === guest.id) {
-                table.seats[guest.seatIndex] = null;
-            }
-        }
-        
-        // Supprimer l'invité
-        guests = guests.filter(g => g.id !== id);
-        saveData();
-        
-        // Mettre à jour l'interface
-        updateGuestList();
-        updateTables();
-        updateStats();
-        
-        showNotification('Invité supprimé avec succès');
-        
-        // Fermer la modal
-        modal.classList.remove('show');
-        
-        // Nettoyer
-        confirmBtn.removeEventListener('click', confirmAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Action d'annulation
-    const cancelAction = () => {
-        modal.classList.remove('show');
-        confirmBtn.removeEventListener('click', confirmAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Ajouter les écouteurs d'événements
-    confirmBtn.addEventListener('click', confirmAction);
-    cancelBtn.addEventListener('click', cancelAction);
-    
-    // Afficher la modal
-    modal.classList.add('show');
-}
-
-// Initialisation des contrôles de table
-function initTableControls() {
-    const tableForm = document.getElementById('tableForm');
-    const seatsInput = document.getElementById('tableSeats');
-    
-    tableForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const seatsCount = parseInt(seatsInput.value);
-        
-        if (isNaN(seatsCount) || seatsCount < 1) {
-            showNotification('Veuillez entrer un nombre valide de places', true);
-            return;
-        }
-        
-        addTable(seatsCount);
-        tableForm.reset();
-    });
-}
-
-// Ajout d'une table
-function addTable(seatsCount) {
-    const tableNumber = tables.length + 1;
-    
-    const newTable = {
-        id: Date.now().toString(),
-        number: tableNumber,
-        seats: Array(seatsCount).fill(null)
-    };
-    
-    tables.push(newTable);
-    saveData();
-    updateTables();
-    updateStats();
-    
-    showNotification(`Table ${tableNumber} ajoutée avec ${seatsCount} places`);
-}
-
-// Mise à jour de l'affichage des tables
-function updateTables() {
-    const tablesContainer = document.getElementById('tablesContainer');
-    
-    // Vider le conteneur
-    tablesContainer.innerHTML = '';
-    
-    // Afficher l'état vide si nécessaire
-    if (tables.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-list';
-        emptyState.innerHTML = `
-            <i class="fas fa-chair"></i>
-            <h3>Aucune table</h3>
-            <p>Ajoutez des tables en utilisant le formulaire ci-dessus</p>
-        `;
-        tablesContainer.appendChild(emptyState);
+    const index = parseInt(selection);
+    if (isNaN(index) || index < 0 || index >= presets.length) {
+        showNotification('Sélection invalide', 'error');
         return;
     }
     
-    // Créer chaque table
-    tables.forEach(table => {
-        const tableEl = document.createElement('div');
-        tableEl.className = 'table';
-        
-        let seatsHtml = '';
-        
-        table.seats.forEach((guestId, index) => {
-            let seatContent = '';
-            let seatClass = 'seat';
-            
-            if (guestId) {
-                const guest = guests.find(g => g.id === guestId);
-                if (guest) {
-                    seatContent = guest.name;
-                    seatClass += ' occupied';
-                    
-                    // Ajouter un indicateur si c'est un couple
-                    if (guest.isCouple && guest.partnerName) {
-                        seatContent += `<br><small>${guest.partnerName}</small>`;
-                    }
-                }
-            }
-            
-            seatsHtml += `
-                <div class="${seatClass}" data-table-id="${table.id}" data-seat-index="${index}">
-                    ${guestId ? seatContent : `<i class="fas fa-plus"></i>`}
-                </div>
-            `;
+    const preset = presets[index];
+    
+    // Load content type
+    currentContentType = preset.contentType;
+    const contentBtn = document.querySelector(`[data-type="${currentContentType}"]`);
+    if (contentBtn) contentBtn.click();
+    
+    // Load filters
+    selectedFilters = preset.filters;
+    loadFiltersToUI();
+    
+    showNotification(`Preset "${preset.name}" chargé !`);
+}
+
+// Load filters to UI
+function loadFiltersToUI() {
+    // Clear all checkboxes
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    // Set checkboxes
+    ['quality', 'language', 'source', 'codec', 'seasonEpisode'].forEach(filterType => {
+        const values = selectedFilters[filterType] || [];
+        const name = filterType === 'seasonEpisode' ? 'season-episode' : filterType;
+        values.forEach(value => {
+            const checkbox = document.querySelector(`input[name="${name}"][value="${value}"]`);
+            if (checkbox) checkbox.checked = true;
         });
-        
-        tableEl.innerHTML = `
-            <div class="table-header">
-                <h3>Table ${table.number}</h3>
-                <button class="delete-table" data-table-id="${table.id}">
-                    <i class="fas fa-trash-alt"></i> Supprimer
-                </button>
-            </div>
-            <div class="seats">
-                ${seatsHtml}
-            </div>
-        `;
-        
-        tablesContainer.appendChild(tableEl);
-        
-        // Ajouter les écouteurs d'événements
-        tableEl.querySelectorAll('.seat').forEach(seat => {
-            seat.addEventListener('click', () => {
-                const tableId = seat.getAttribute('data-table-id');
-                const seatIndex = parseInt(seat.getAttribute('data-seat-index'));
-                assignGuest(tableId, seatIndex);
-            });
-        });
-        
-        tableEl.querySelector('.delete-table').addEventListener('click', () => {
-            deleteTable(table.id);
-        });
+    });
+    
+    // Set release group
+    const releaseGroupCb = document.querySelector('input[name="release-group"]');
+    if (releaseGroupCb) releaseGroupCb.checked = selectedFilters.releaseGroup;
+    
+    // Set number inputs
+    const yearMin = document.getElementById('yearMin');
+    const yearMax = document.getElementById('yearMax');
+    const seasonMin = document.getElementById('seasonMin');
+    const seasonMax = document.getElementById('seasonMax');
+    const specificGroup = document.getElementById('specificGroup');
+    
+    if (yearMin) yearMin.value = selectedFilters.yearMin || '';
+    if (yearMax) yearMax.value = selectedFilters.yearMax || '';
+    if (seasonMin) seasonMin.value = selectedFilters.seasonMin || '';
+    if (seasonMax) seasonMax.value = selectedFilters.seasonMax || '';
+    if (specificGroup) specificGroup.value = selectedFilters.specificGroup || '';
+    
+    generateRegex();
+}
+
+// Copy regex to clipboard
+function copyRegexToClipboard() {
+    const regexElement = document.getElementById('generatedRegex');
+    if (!regexElement) return;
+    
+    const regex = regexElement.textContent;
+    navigator.clipboard.writeText(regex).then(() => {
+        showNotification('Regex copiée dans le presse-papier !');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = regex;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('Regex copiée dans le presse-papier !');
     });
 }
 
-// Assignation d'un invité à une place
-function assignGuest(tableId, seatIndex) {
-    const table = tables.find(t => t.id === tableId);
-    if (!table) return;
-    
-    const currentGuestId = table.seats[seatIndex];
-    const modal = document.getElementById('assignGuestModal');
-    const guestSelect = document.getElementById('guestSelect');
-    const confirmBtn = document.getElementById('confirmAssign');
-    const clearBtn = document.getElementById('clearAssign');
-    const cancelBtn = document.getElementById('cancelAssign');
-    const modalTitle = document.getElementById('assignModalTitle');
-    
-    // Mettre à jour le titre
-    modalTitle.textContent = `Assigner un invité à la Table ${table.number}, Place ${seatIndex + 1}`;
-    
-    // Vider la sélection actuelle
-    guestSelect.innerHTML = '';
-    
-    // Créer les options d'invités
-    const unassignedGuests = guests.filter(guest => 
-        (guest.tableId === null) || // Non assigné
-        (guest.id === currentGuestId) || // L'invité actuel
-        (guest.tableId === tableId && guest.seatIndex === seatIndex) // Même place
-    );
-    
-    if (unassignedGuests.length === 0) {
-        const noGuests = document.createElement('div');
-        noGuests.className = 'empty-list';
-        noGuests.style.padding = '1rem';
-        noGuests.innerHTML = `
-            <i class="fas fa-user-slash"></i>
-            <p>Aucun invité disponible</p>
-            <small>Tous les invités sont déjà assignés à des tables</small>
-        `;
-        guestSelect.appendChild(noGuests);
-        confirmBtn.disabled = true;
-    } else {
-        confirmBtn.disabled = false;
-        
-        unassignedGuests.forEach(guest => {
-            const option = document.createElement('div');
-            option.className = 'guest-option';
-            option.setAttribute('data-guest-id', guest.id);
-            
-            // Afficher l'info du partenaire pour les couples
-            let partnerInfo = '';
-            if (guest.isCouple && guest.partnerName) {
-                partnerInfo = `<div class="couple-note"><i class="fas fa-heart"></i> ${guest.name} est en couple avec ${guest.partnerName}</div>`;
-            }
-            
-            option.innerHTML = `
-                <div>
-                    <strong>${guest.name}</strong>
-                    ${guest.isCouple ? '<span class="badge-couple"><i class="fas fa-heart"></i> Couple</span>' : ''}
-                </div>
-                <div class="status ${guest.status}">
-                    ${guest.status === 'pending' ? 'En attente' : 
-                      guest.status === 'confirmed' ? 'Confirmé' : 'Décliné'}
-                </div>
-                ${partnerInfo}
-            `;
-            
-            // Ajouter une class pour l'invité actuellement assigné
-            if (guest.id === currentGuestId) {
-                option.classList.add('current');
-                option.style.background = 'rgba(98, 0, 234, 0.1)';
-                option.style.borderLeft = '3px solid var(--primary-color)';
-            }
-            
-            guestSelect.appendChild(option);
-            
-            // Ajouter un écouteur d'événement
-            option.addEventListener('click', () => {
-                // Réinitialiser les classes actives
-                document.querySelectorAll('.guest-option').forEach(opt => {
-                    opt.classList.remove('selected');
-                });
-                
-                // Ajouter la classe active
-                option.classList.add('selected');
-                
-                // Stocker l'ID de l'invité sélectionné
-                selectedGuestId = guest.id;
-            });
-        });
-    }
-    
-    // Réinitialiser la sélection
-    let selectedGuestId = null;
-    
-    // Action de confirmation
-    const confirmAction = () => {
-        if (!selectedGuestId) {
-            showNotification('Veuillez sélectionner un invité', true);
-            return;
-        }
-        
-        const selectedGuest = guests.find(g => g.id === selectedGuestId);
-        
-        // Si l'invité est déjà assigné à une autre place, libérer cette place
-        if (selectedGuest.tableId !== null) {
-            const oldTable = tables.find(t => t.id === selectedGuest.tableId);
-            if (oldTable && oldTable.seats[selectedGuest.seatIndex] === selectedGuest.id) {
-                oldTable.seats[selectedGuest.seatIndex] = null;
-            }
-        }
-        
-        // Assigner l'invité à la nouvelle place
-        selectedGuest.tableId = tableId;
-        selectedGuest.seatIndex = seatIndex;
-        table.seats[seatIndex] = selectedGuest.id;
-        
-        saveData();
-        updateTables();
-        updateGuestList();
-        
-        showNotification(`${selectedGuest.name} assigné à la Table ${table.number}, Place ${seatIndex + 1}`);
-        
-        // Fermer la modal
-        modal.classList.remove('show');
-        
-        // Nettoyer
-        confirmBtn.removeEventListener('click', confirmAction);
-        clearBtn.removeEventListener('click', clearAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Action de libération de la place
-    const clearAction = () => {
-        // Vérifier si la place est occupée
-        if (currentGuestId) {
-            const currentGuest = guests.find(g => g.id === currentGuestId);
-            if (currentGuest) {
-                currentGuest.tableId = null;
-                currentGuest.seatIndex = null;
-            }
-            
-            table.seats[seatIndex] = null;
-            
-            saveData();
-            updateTables();
-            updateGuestList();
-            
-            showNotification(`Place ${seatIndex + 1} de la Table ${table.number} libérée`);
-        }
-        
-        // Fermer la modal
-        modal.classList.remove('show');
-        
-        // Nettoyer
-        confirmBtn.removeEventListener('click', confirmAction);
-        clearBtn.removeEventListener('click', clearAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Action d'annulation
-    const cancelAction = () => {
-        modal.classList.remove('show');
-        confirmBtn.removeEventListener('click', confirmAction);
-        clearBtn.removeEventListener('click', clearAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Ajouter les écouteurs d'événements
-    confirmBtn.addEventListener('click', confirmAction);
-    clearBtn.addEventListener('click', clearAction);
-    cancelBtn.addEventListener('click', cancelAction);
-    
-    // Activer/désactiver le bouton de libération
-    clearBtn.disabled = !currentGuestId;
-    
-    // Afficher la modal
-    modal.classList.add('show');
-}
-
-// Suppression d'une table
-function deleteTable(tableId) {
-    const table = tables.find(t => t.id === tableId);
-    if (!table) return;
-    
-    const modal = document.getElementById('deleteTableConfirmModal');
-    const confirmBtn = document.getElementById('confirmTableDelete');
-    const cancelBtn = document.getElementById('cancelTableDelete');
-    const tableNumberEl = document.getElementById('deleteTableNumber');
-    
-    // Mettre à jour le numéro de table
-    tableNumberEl.textContent = table.number;
-    
-    // Action de confirmation
-    const confirmAction = () => {
-        // Libérer tous les invités assignés à cette table
-        guests.forEach(guest => {
-            if (guest.tableId === tableId) {
-                guest.tableId = null;
-                guest.seatIndex = null;
-            }
-        });
-        
-        // Supprimer la table
-        tables = tables.filter(t => t.id !== tableId);
-        
-        // Renuméroter les tables
-        tables.forEach((t, index) => {
-            t.number = index + 1;
-        });
-        
-        saveData();
-        updateTables();
-        updateGuestList();
-        updateStats();
-        
-        showNotification(`Table ${table.number} supprimée`);
-        
-        // Fermer la modal
-        modal.classList.remove('show');
-        
-        // Nettoyer
-        confirmBtn.removeEventListener('click', confirmAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Action d'annulation
-    const cancelAction = () => {
-        modal.classList.remove('show');
-        confirmBtn.removeEventListener('click', confirmAction);
-        cancelBtn.removeEventListener('click', cancelAction);
-    };
-    
-    // Ajouter les écouteurs d'événements
-    confirmBtn.addEventListener('click', confirmAction);
-    cancelBtn.addEventListener('click', cancelAction);
-    
-    // Afficher la modal
-    modal.classList.add('show');
-}
-
-// Mise à jour des statistiques
-function updateStats() {
-    // Compter les invités par statut
-    const totalGuests = guests.length;
-    const pendingGuests = guests.filter(g => g.status === 'pending').length;
-    const confirmedGuests = guests.filter(g => g.status === 'confirmed').length;
-    const declinedGuests = guests.filter(g => g.status === 'declined').length;
-    
-    // Compter les invités avec partenaire (couples)
-    const coupleCount = guests.filter(g => g.isCouple).length;
-    
-    // Compter les places et les places occupées
-    let totalSeats = 0;
-    let occupiedSeats = 0;
-    
-    tables.forEach(table => {
-        totalSeats += table.seats.length;
-        occupiedSeats += table.seats.filter(seat => seat !== null).length;
-    });
-    
-    // Mettre à jour les éléments HTML
-    document.getElementById('totalGuests').textContent = totalGuests;
-    document.getElementById('pendingGuests').textContent = pendingGuests;
-    document.getElementById('confirmedGuests').textContent = confirmedGuests;
-    document.getElementById('declinedGuests').textContent = declinedGuests;
-    document.getElementById('coupleCount').textContent = coupleCount;
-    document.getElementById('totalTables').textContent = tables.length;
-    document.getElementById('totalSeats').textContent = totalSeats;
-    document.getElementById('occupiedSeats').textContent = occupiedSeats;
-    
-    // Ajuster la position des notifications selon la hauteur du footer
-    adjustNotificationPosition();
-}
-
-// Fonction pour ajuster la position des notifications par rapport au footer
-function adjustNotificationPosition() {
-    const footer = document.querySelector('footer');
-    if (!footer) return;
-    
-    const footerHeight = footer.offsetHeight;
-    const notificationStyle = document.createElement('style');
-    
-    notificationStyle.id = 'notification-position-style';
-    notificationStyle.textContent = `
-        .notification {
-            bottom: ${footerHeight + 10}px;
-        }
-    `;
-    
-    // Supprimer le style précédent s'il existe
-    const oldStyle = document.getElementById('notification-position-style');
-    if (oldStyle) {
-        oldStyle.remove();
-    }
-    
-    // Ajouter le nouveau style
-    document.head.appendChild(notificationStyle);
-    
-    // Mettre à jour le padding-bottom du body
-    document.body.style.paddingBottom = `${footerHeight + 5}px`;
-}
-
-// Fonction pour afficher une notification
-function showNotification(message, isError = false) {
+// Show notification
+function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
-    notification.className = `notification ${isError ? 'error' : ''}`;
+    notification.className = `notification ${type}`;
     notification.textContent = message;
     
-    // Supprimer les notifications existantes
-    document.querySelectorAll('.notification').forEach(n => n.remove());
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#f44336' : '#4caf50'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        z-index: 10000;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideIn 0.3s ease;
+    `;
     
     document.body.appendChild(notification);
     
-    // Animer l'entrée
     setTimeout(() => {
-        notification.classList.add('show');
-    }, 10);
-    
-    // Supprimer après 3 secondes
-    setTimeout(() => {
-        notification.classList.remove('show');
-        
+        notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
-            notification.remove();
+            if (notification.parentElement) {
+                notification.parentElement.removeChild(notification);
+            }
         }, 300);
     }, 3000);
 }
 
-// Événement au chargement du document
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialiser les composants
-    initNavigation();
-    initGuestForm();
-    initFilters();
-    initTableControls();
-    initDataControls();
-    
-    // Mettre à jour les affichages
-    updateGuestList();
-    updateTables();
-    updateStats();
-    
-    // Ajuster la position des notifications au chargement et au redimensionnement
-    adjustNotificationPosition();
-    window.addEventListener('resize', adjustNotificationPosition);
-    
-    // Événements pour les modals (fermeture par clic sur X)
-    document.querySelectorAll('.close').forEach(closeBtn => {
-        closeBtn.addEventListener('click', () => {
-            const modal = closeBtn.closest('.modal');
-            if (modal) modal.classList.remove('show');
-        });
-    });
-    
-    // Fermeture des modals en cliquant à l'extérieur
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('show');
-            }
-        });
-    });
-});
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
